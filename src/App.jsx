@@ -36,21 +36,26 @@ const ChallengeTracker = () => {
   
   // Initial Users
   const INITIAL_USERS = [
-    { id: 1, name: "Yash", habits: ["Workout", "Read 10p", "No Sugar"] },
+    { id: 1, name: "Yash", habits: ["Workout everyday", "Read non-fiction for 15 mins", "Stay logged out of personal instagram"] },
     { id: 2, name: "Akshar", habits: ["Run 5k", "Code 1hr", "Water 2L"] },
     { id: 3, name: "Maadhav", habits: ["Daily workout", "Daily nutritional goal", "4hrs of deep work"] },
     { id: 4, name: "Dev", habits: ["No sugar", "Less than 4 hours phone screen time", "Gym"] },
-    { id: 5, name: "Lin", habits: ["Gym", "Protein", "Sleep 8h"] },
-    { id: 6, name: "Pritam", habits: ["Write", "Draw", "Clean"] },
+    { id: 5, name: "Lin", habits: ["30 mins workout/10k steps", "Read 10 pages of non-fiction", "Drink 2L of water","Eat 2 servings of fruits & veg"] },
+    { id: 6, name: "Priyan", habits: ["Write", "Draw", "Clean"] },
     { id: 7, name: "Megan", habits: ["Gym", "3hrs of study", "3hrs of sim racing"] },
     { id: 8, name: "Nirav", habits: ["Swim", "Read", "Skin Care"] },
     { id: 9, name: "Daksh", habits: ["No sugar", "Daily reading", "Workout","1 weekly podcast"] },
-    { id: 10, name: "Raheel", habits: ["Dance", "Music", "Garden"] },
+    { id: 10, name: "Raheel", habits: ["No sugar", "Daily workout", "Less than 1.5hrs of screentime","2hrs of productive work"] },
     { id: 11, name: "Nisha", habits: ["Daily Workout", "Handstand Practice", "No gluten/dairy"] },
     { id: 12, name: "Tirth", habits: ["1.5 hours reading", "Less than 20g sugar", "25 minutes of prayer","Hybrid workout"] },
     { id: 13, name: "Rayan", habits: ["5 hours of study", "30 mins workout daily", "Daily vlog"] },
     { id: 14, name: "Moulik", habits: ["Gym", "Eat a home-cooked dinner", "Watch 2 Marrow Lectures"] },
     { id: 15, name: "Kliz", habits: ["Gym", "Eat a home-cooked dinner", "Daily vlog"] },
+    { id: 16, name: "Ram", habits: ["Wake up before 8 every weekday", "Brainrot for under 2hrs", "Read for 30 minutes"] },
+    { id: 17, name: "Ash", habits: ["30 squats a day", "3 hours study daily", "Read for 30 minutes"] },
+    { id: 18, name: "Milan", habits: ["Overnight Oats for brekky", "60 push ups daily", "Healthy sleep schedule"] },
+    { id: 19, name: "Shreya", habits: ["Read for 30 mins daily", "1 fresh fruit a day", "Sleep by 11:30 everyday"] },
+    { id: 20, name: "Yogen", habits: ["Read for 30 mins daily", "1 fresh fruit a day", "Sleep by 11:30 everyday"] },
   ];
 
   // --- State ---
