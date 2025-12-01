@@ -37,7 +37,7 @@ const ChallengeTracker = () => {
   // Initial Users
   const INITIAL_USERS = [
     { id: 1, name: "Yash", habits: ["Workout everyday", "Read non-fiction for 15 mins", "Stay logged out of personal instagram"] },
-    { id: 2, name: "Akshar", habits: ["Run 5k", "Code 1hr", "Water 2L"] },
+    { id: 2, name: "Akshar", habits: ["Daily workout", "Daily 4hrs study", "Read a spiritual scripture for 15 mins"] },
     { id: 3, name: "Maadhav", habits: ["Daily workout", "Daily nutritional goal", "4hrs of deep work"] },
     { id: 4, name: "Dev", habits: ["No sugar", "Less than 4 hours phone screen time", "Gym"] },
     { id: 5, name: "Lin", habits: ["30 mins workout/10k steps", "Read 10 pages of non-fiction", "Drink 2L of water","Eat 2 servings of fruits & veg"] },
