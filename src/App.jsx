@@ -5,17 +5,14 @@ import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged }
 import { getFirestore, doc, setDoc, onSnapshot } from "firebase/firestore";
 
 // --- FIREBASE CONFIGURATION ---
-// 1. Go to Firebase Console -> Project Settings
-// 2. Copy your keys and paste them inside these quotes:
-
 const firebaseConfig = {
-    apiKey: "AIzaSyAi9u70r8VUoKAjRIH_5rFL6DCo6wCgaok",
-    authDomain: "final-30-day-dash.firebaseapp.com",
-    projectId: "final-30-day-dash",
-    storageBucket: "final-30-day-dash.firebasestorage.app",
-    messagingSenderId: "492385758592",
-    appId: "1:492385758592:web:6bed1da895cb9abbfb6565"
-  };
+  apiKey: "AIzaSyAi9u70r8VUoKAjRIH_5rFL6DCo6wCgaok",
+  authDomain: "final-30-day-dash.firebaseapp.com",
+  projectId: "final-30-day-dash",
+  storageBucket: "final-30-day-dash.firebasestorage.app",
+  messagingSenderId: "492385758592",
+  appId: "1:492385758592:web:6bed1da895cb9abbfb6565"
+};
 
 // --- App Initialization ---
 let app, auth, db;
@@ -34,7 +31,7 @@ const ChallengeTracker = () => {
   const TOTAL_DAYS = 30;
   const ADMIN_PIN = "26102004"; // Your Secret PIN
   
-  // Initial Users
+  // Initial Users (Updated List from your code)
   const INITIAL_USERS = [
     { id: 1, name: "Yash", habits: ["Workout everyday", "Read non-fiction for 15 mins", "Stay logged out of personal instagram","100 daily push ups"] },
     { id: 2, name: "Akshar", habits: ["Daily workout", "Daily 4hrs study", "Read a spiritual scripture for 15 mins"] },
@@ -57,6 +54,9 @@ const ChallengeTracker = () => {
     { id: 19, name: "Shreya", habits: ["Read for 30 mins daily", "1 fresh fruit a day", "Sleep by 11:30 everyday"] },
     { id: 20, name: "Yogen", habits: ["No soda", "No ice cream", "2hrs daily playstation time limit","Lose 2.5lbs per week","20 min daily walk"] },
     { id: 21, name: "Nimish", habits: ["50 push ups daily", "30 mins non-academic reading daily"] },
+    { id: 22, name: "Zaynah", habits: ["Gym for an hour", "Drink 2L of water","Take vitamins","Read for 30 mins or Journal"] },
+    { id: 23, name: "Priyan", habits: ["Sleep and wake up on time", "1hr of work towards a personal goal","Exercise for 30 mins"] },
+    { id: 24, name: "Aman", habits: ["Screen time under 6 hours", "Gym 3x a week","7hrs of sleep"] },
   ];
 
   // --- State ---
@@ -219,31 +219,6 @@ const ChallengeTracker = () => {
     return badges;
   };
 
-  const getWeeklyChamps = () => {
-    const weeks = [
-      { id: 1, range: [1, 7], label: "Week 1" },
-      { id: 2, range: [8, 14], label: "Week 2" },
-      { id: 3, range: [15, 21], label: "Week 3" },
-      { id: 4, range: [22, 28], label: "Week 4" }, 
-    ];
-
-    return weeks.map(week => {
-      let bestUser = null;
-      let maxSuccesses = -1;
-      INITIAL_USERS.forEach(user => {
-        let successCount = 0;
-        for (let d = week.range[0]; d <= week.range[1]; d++) {
-          if (getDayStats(user.id, d).isSuccessful) successCount++;
-        }
-        if (successCount > maxSuccesses) {
-          maxSuccesses = successCount;
-          bestUser = user;
-        }
-      });
-      return { ...week, winner: bestUser, score: maxSuccesses };
-    });
-  };
-
   // --- View Components ---
 
   const LandingPage = () => (
@@ -259,7 +234,7 @@ const ChallengeTracker = () => {
         )}
         <div className="space-y-3 mb-8">
           <p className="text-xs font-bold uppercase tracking-widest text-indigo-300 mb-2">Participants</p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1">
             {INITIAL_USERS.map(u => (
               <button
                 key={u.id}
@@ -452,12 +427,32 @@ const ChallengeTracker = () => {
     );
   };
 
+  // --- UPDATED DAILY SUMMARY (Multi-Leader + Ranks) ---
   const DailySummaryView = () => {
     const successfulUsers = INITIAL_USERS.filter(u => getDayStats(u.id, summaryDay).isSuccessful);
     const unsuccessfulUsers = INITIAL_USERS.filter(u => !getDayStats(u.id, summaryDay).isSuccessful);
-    const streakLeaders = INITIAL_USERS.map(u => ({...u, currentStreak: getStreakData(u.id).streaksByDay[summaryDay] || 0})).sort((a, b) => b.currentStreak - a.currentStreak);
-    const topStreak = streakLeaders[0];
-    const topStreakLeaders = streakLeaders.filter(u => u.currentStreak > 0).slice(0, 5);
+    
+    // Sort Streak Leaders
+    const streakLeaders = INITIAL_USERS.map(u => ({
+      ...u,
+      currentStreak: getStreakData(u.id).streaksByDay[summaryDay] || 0
+    })).sort((a, b) => b.currentStreak - a.currentStreak);
+
+    // Identify Top Leaders (Handle Ties)
+    const maxStreakVal = streakLeaders[0]?.currentStreak || 0;
+    const allTopLeaders = streakLeaders.filter(u => u.currentStreak === maxStreakVal && maxStreakVal > 0);
+
+    // Calculate Rankings (Handle Ties)
+    let currentRank = 1;
+    const rankedList = streakLeaders
+      .filter(u => u.currentStreak > 0)
+      .map((u, index, arr) => {
+        if (index > 0 && u.currentStreak < arr[index - 1].currentStreak) {
+          currentRank = index + 1; // Standard competition ranking
+        }
+        return { ...u, rank: currentRank };
+      })
+      .slice(0, 10); // Show top 10
 
     return (
       <div className="max-w-3xl mx-auto">
@@ -471,6 +466,7 @@ const ChallengeTracker = () => {
                </select>
              </div>
           </div>
+          
           <div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white p-6 md:p-8 rounded-xl shadow-2xl relative overflow-hidden">
              <div className="absolute top-0 right-0 p-8 opacity-10"><Trophy size={200} /></div>
              <div className="relative z-10">
@@ -484,25 +480,51 @@ const ChallengeTracker = () => {
                  </div>
                  <div className="bg-white/10 p-3 rounded-xl backdrop-blur-sm border border-white/20"><Calendar className="text-white" size={24} /></div>
                </div>
+
+               {/* Multi-Leader Header */}
                <div className="mb-6 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded-lg p-4 flex items-center justify-between backdrop-blur-sm">
                  <div className="flex items-center gap-3">
                    <div className="bg-amber-500 text-white p-2 rounded-full shadow-lg shadow-amber-500/50"><Crown size={20} /></div>
-                   <div><p className="text-xs text-amber-200 font-bold uppercase tracking-widest">Current Streak Leader</p><p className="text-lg font-bold text-white">{topStreak?.name || "None"}</p></div>
+                   <div>
+                     <p className="text-xs text-amber-200 font-bold uppercase tracking-widest">
+                       {allTopLeaders.length > 1 ? "Current Streak Leaders" : "Current Streak Leader"}
+                     </p>
+                     <p className="text-lg font-bold text-white leading-tight">
+                        {allTopLeaders.length > 0 
+                          ? allTopLeaders.map(u => u.name).join(", ") 
+                          : "None"}
+                     </p>
+                   </div>
                  </div>
-                 <div className="text-2xl font-black text-amber-400">{topStreak?.currentStreak || 0} <span className="text-sm font-medium text-amber-200/70">DAYS</span></div>
+                 <div className="text-2xl font-black text-amber-400 whitespace-nowrap pl-4">
+                   {maxStreakVal} <span className="text-sm font-medium text-amber-200/70">DAYS</span>
+                 </div>
                </div>
+
                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                  <div className="bg-emerald-900/30 rounded-lg p-4 backdrop-blur-sm border border-emerald-500/30">
                    <div className="flex items-center gap-2 mb-3 border-b border-emerald-500/30 pb-2"><CheckCircle className="text-emerald-400" size={18} /><h4 className="font-bold text-emerald-100 text-sm uppercase">Crushed It</h4></div>
                    <div className="space-y-2">{successfulUsers.length > 0 ? successfulUsers.map(u => <div key={u.id} className="flex items-center gap-2 text-sm font-medium text-emerald-50"><div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">✓</div>{u.name}</div>) : <p className="text-xs text-emerald-200/50 italic">No completions yet.</p>}</div>
                  </div>
+                 
                  <div className="bg-red-900/30 rounded-lg p-4 backdrop-blur-sm border border-red-500/30">
                    <div className="flex items-center gap-2 mb-3 border-b border-red-500/30 pb-2"><XCircle className="text-red-400" size={18} /><h4 className="font-bold text-red-100 text-sm uppercase">Needs to Lock In</h4></div>
                    <div className="space-y-2">{unsuccessfulUsers.length > 0 ? unsuccessfulUsers.map(u => <div key={u.id} className="flex items-center gap-2 text-sm font-medium text-red-50 opacity-80"><div className="w-5 h-5 rounded-full bg-red-500/20 text-red-300 flex items-center justify-center text-[10px]">✕</div>{u.name}</div>) : <p className="text-xs text-green-300 italic">Everyone succeeded! 🎉</p>}</div>
                  </div>
+                 
                  <div className="bg-orange-900/30 rounded-lg p-4 backdrop-blur-sm border border-orange-500/30">
                    <div className="flex items-center gap-2 mb-3 border-b border-orange-500/30 pb-2"><Flame className="text-orange-400 fill-orange-400" size={18} /><h4 className="font-bold text-orange-100 text-sm uppercase">Top Streaks</h4></div>
-                   <div className="space-y-2">{topStreakLeaders.length > 0 ? topStreakLeaders.map((u, idx) => <div key={u.id} className="flex items-center justify-between text-sm"><div className="flex items-center gap-2 text-orange-50"><span className={`text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full ${idx === 0 ? 'bg-yellow-400 text-yellow-900' : 'bg-white/10 text-white'}`}>{idx + 1}</span><span>{u.name}</span></div><span className="font-bold text-orange-300 text-xs">{u.currentStreak}</span></div>) : <p className="text-xs text-orange-200/50 italic">Start a streak today!</p>}</div>
+                   <div className="space-y-2">
+                     {rankedList.length > 0 ? rankedList.map((u) => (
+                       <div key={u.id} className="flex items-center justify-between text-sm">
+                         <div className="flex items-center gap-2 text-orange-50">
+                           <span className={`text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full ${u.rank === 1 ? 'bg-yellow-400 text-yellow-900' : 'bg-white/10 text-white'}`}>#{u.rank}</span>
+                           <span>{u.name}</span>
+                         </div>
+                         <span className="font-bold text-orange-300 text-xs">{u.currentStreak}</span>
+                       </div>
+                     )) : <p className="text-xs text-orange-200/50 italic">Start a streak today!</p>}
+                   </div>
                  </div>
                </div>
                <div className="mt-8 pt-4 border-t border-white/10 flex justify-between items-center"><p className="text-xs text-indigo-200 uppercase tracking-widest font-bold">30 Day Dash</p></div>
@@ -514,23 +536,59 @@ const ChallengeTracker = () => {
     );
   };
 
+  // --- UPDATED LEADERBOARD (Shared Ranks) ---
   const LeaderboardView = () => {
-    const leaders = INITIAL_USERS.map(u => { const stats = getStreakData(u.id); return { ...u, maxStreak: stats.maxStreak }; }).sort((a, b) => b.maxStreak - a.maxStreak);
+    // Sort all users
+    const leaders = INITIAL_USERS.map(u => {
+      const stats = getStreakData(u.id);
+      return { ...u, maxStreak: stats.maxStreak };
+    }).sort((a, b) => b.maxStreak - a.maxStreak);
+
+    // Assign Ranks with Ties
+    let currentRank = 1;
+    const rankedLeaders = leaders.map((u, index, arr) => {
+      if (index > 0 && u.maxStreak < arr[index - 1].maxStreak) {
+        currentRank = index + 1;
+      }
+      return { ...u, rank: currentRank };
+    });
+
     return (
       <div className="bg-white rounded-xl shadow-lg border border-indigo-100">
-        <div className="px-6 py-4 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50"><h2 className="text-lg font-bold text-indigo-900">Overall Standings & Badges</h2></div>
-        <div className="p-0">{leaders.map((user, idx) => (
+        <div className="px-6 py-4 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
+           <h2 className="text-lg font-bold text-indigo-900">Overall Standings & Badges</h2>
+        </div>
+        <div className="p-0">
+          {rankedLeaders.map((user, idx) => (
             <div key={user.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 border-b border-indigo-50 last:border-0 hover:bg-indigo-50/30 gap-4 transition-colors">
               <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm ${idx === 0 ? 'bg-gradient-to-br from-yellow-300 to-yellow-500 text-yellow-900 border border-yellow-200' : idx === 1 ? 'bg-gradient-to-br from-slate-200 to-slate-400 text-slate-800 border border-slate-300' : idx === 2 ? 'bg-gradient-to-br from-orange-200 to-orange-400 text-orange-900 border border-orange-300' : 'bg-white text-gray-500 border border-gray-200'}`}>{idx === 0 ? <Crown size={16} /> : idx + 1}</div>
-                <div><p className="font-bold text-gray-900">{user.name}</p><p className="text-xs text-indigo-500 font-medium">{user.habits.join(", ")}</p></div>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm
+                  ${user.rank === 1 ? 'bg-gradient-to-br from-yellow-300 to-yellow-500 text-yellow-900 border border-yellow-200' : 
+                    user.rank === 2 ? 'bg-gradient-to-br from-slate-200 to-slate-400 text-slate-800 border border-slate-300' :
+                    user.rank === 3 ? 'bg-gradient-to-br from-orange-200 to-orange-400 text-orange-900 border border-orange-300' : 'bg-white text-gray-500 border border-gray-200'}`}>
+                  {user.rank === 1 ? <Crown size={16} /> : user.rank}
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900">{user.name}</p>
+                  <p className="text-xs text-indigo-500 font-medium">{user.habits.join(", ")}</p>
+                </div>
               </div>
               <div className="flex items-center gap-6 justify-between sm:justify-end w-full sm:w-auto">
-                <div className="flex gap-1 flex-wrap justify-end">{getBadges(user.id).map((b, i) => (<div key={i} title={b.label} className="relative group transition-transform hover:scale-110"><b.icon size={22} className={`${b.color} cursor-help drop-shadow-sm`} /></div>))}</div>
-                <div className="text-right min-w-[60px]"><span className="block text-2xl font-black text-transparent bg-clip-text bg-gradient-to-br from-indigo-600 to-purple-600">{user.maxStreak}</span><span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Streak</span></div>
+                <div className="flex gap-1 flex-wrap justify-end">
+                   {getBadges(user.id).map((b, i) => (
+                     <div key={i} title={b.label} className="relative group transition-transform hover:scale-110">
+                        <b.icon size={22} className={`${b.color} cursor-help drop-shadow-sm`} />
+                     </div>
+                   ))}
+                </div>
+                <div className="text-right min-w-[60px]">
+                  <span className="block text-2xl font-black text-transparent bg-clip-text bg-gradient-to-br from-indigo-600 to-purple-600">{user.maxStreak}</span>
+                  <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Streak</span>
+                </div>
               </div>
             </div>
-          ))}</div>
+          ))}
+        </div>
       </div>
     );
   };
@@ -576,11 +634,11 @@ const ChallengeTracker = () => {
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <button onClick={() => setShowShareModal(true)} className="flex items-center gap-2 bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl font-bold hover:bg-indigo-200 transition-colors"><LinkIcon size={16} /> Share Personal Links</button>
-            <div className="flex bg-white p-1.5 rounded-xl border border-indigo-100 shadow-lg shadow-indigo-100/50 w-full sm:w-auto overflow-x-auto">{[{ id: 'tracker', label: 'All Inputs' }, { id: 'summary', label: 'Summary', icon: Share2 }, { id: 'leaderboard', label: 'Leaderboard' }, { id: 'weekly', label: 'Weekly' }].map(tab => <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md' : 'text-gray-500 hover:bg-indigo-50 hover:text-indigo-600'}`}>{tab.icon && <tab.icon size={16} />}{tab.label}</button>)}</div>
+            <div className="flex bg-white p-1.5 rounded-xl border border-indigo-100 shadow-lg shadow-indigo-100/50 w-full sm:w-auto overflow-x-auto">{[{ id: 'tracker', label: 'All Inputs' }, { id: 'summary', label: 'Summary', icon: Share2 }, { id: 'leaderboard', label: 'Leaderboard' }].map(tab => <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md' : 'text-gray-500 hover:bg-indigo-50 hover:text-indigo-600'}`}>{tab.icon && <tab.icon size={16} />}{tab.label}</button>)}</div>
           </div>
         </div>
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {!user ? <div className="p-12 text-center bg-white/50 backdrop-blur-sm rounded-xl shadow-sm border border-indigo-100"><div className="animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mx-auto mb-4"></div><p className="text-indigo-600 font-medium">Loading...</p></div> : <>{activeTab === 'tracker' && <><UserSelector /><TrackerTable /></>}{activeTab === 'leaderboard' && <LeaderboardView />}{activeTab === 'weekly' && <WeeklyChampView />}{activeTab === 'summary' && <DailySummaryView />}</>}
+          {!user ? <div className="p-12 text-center bg-white/50 backdrop-blur-sm rounded-xl shadow-sm border border-indigo-100"><div className="animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mx-auto mb-4"></div><p className="text-indigo-600 font-medium">Loading...</p></div> : <>{activeTab === 'tracker' && <><UserSelector /><TrackerTable /></>}{activeTab === 'leaderboard' && <LeaderboardView />}{activeTab === 'summary' && <DailySummaryView />}</>}
         </div>
       </div>
       {showShareModal && <ShareLinksModal />}
