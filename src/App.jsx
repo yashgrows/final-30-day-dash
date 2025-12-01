@@ -36,7 +36,7 @@ const ChallengeTracker = () => {
   
   // Initial Users
   const INITIAL_USERS = [
-    { id: 1, name: "Yash", habits: ["Workout everyday", "Read non-fiction for 15 mins", "Stay logged out of personal instagram"] },
+    { id: 1, name: "Yash", habits: ["Workout everyday", "Read non-fiction for 15 mins", "Stay logged out of personal instagram","100 daily push ups"] },
     { id: 2, name: "Akshar", habits: ["Daily workout", "Daily 4hrs study", "Read a spiritual scripture for 15 mins"] },
     { id: 3, name: "Maadhav", habits: ["Daily workout", "Daily nutritional goal", "4hrs of deep work"] },
     { id: 4, name: "Dev", habits: ["No sugar", "Less than 4 hours phone screen time", "Gym"] },
@@ -50,12 +50,13 @@ const ChallengeTracker = () => {
     { id: 12, name: "Tirth", habits: ["1.5 hours reading", "Less than 20g sugar", "25 minutes of prayer","Hybrid workout"] },
     { id: 13, name: "Rayan", habits: ["5 hours of study", "30 mins workout daily", "Daily vlog"] },
     { id: 14, name: "Moulik", habits: ["Gym", "Eat a home-cooked dinner", "Watch 2 Marrow Lectures"] },
-    { id: 15, name: "Kliz", habits: ["Gym", "Eat a home-cooked dinner", "Daily vlog"] },
-    { id: 16, name: "Ram", habits: ["Wake up before 8 every weekday", "Brainrot for under 2hrs", "Read for 30 minutes"] },
+    { id: 15, name: "Kliz", habits: ["No processed food", "No doomscrolling"] },
+    { id: 16, name: "Ram", habits: ["Exercise everyday", "Brainrot for under 2hrs", "Read for 15 minutes"] },
     { id: 17, name: "Ash", habits: ["30 squats a day", "3 hours study daily", "Read for 30 minutes"] },
     { id: 18, name: "Milan", habits: ["Overnight Oats for brekky", "60 push ups daily", "Healthy sleep schedule"] },
     { id: 19, name: "Shreya", habits: ["Read for 30 mins daily", "1 fresh fruit a day", "Sleep by 11:30 everyday"] },
-    { id: 20, name: "Yogen", habits: ["Read for 30 mins daily", "1 fresh fruit a day", "Sleep by 11:30 everyday"] },
+    { id: 20, name: "Yogen", habits: ["No soda", "No ice cream", "2hrs daily playstation time limit","Lose 2.5lbs per week","20 min daily walk"] },
+    { id: 20, name: "Nimish", habits: ["50 push ups daily", "30 mins non-academic reading daily"] },
   ];
 
   // --- State ---
