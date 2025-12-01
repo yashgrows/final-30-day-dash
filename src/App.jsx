@@ -42,7 +42,7 @@ const ChallengeTracker = () => {
     { id: 4, name: "Dev", habits: ["No sugar", "Less than 4 hours phone screen time", "Gym"] },
     { id: 5, name: "Lin", habits: ["30 mins workout/10k steps", "Read 10 pages of non-fiction", "Drink 2L of water","Eat 2 servings of fruits & veg"] },
     { id: 6, name: "Priyan", habits: ["Write", "Draw", "Clean"] },
-    { id: 7, name: "Megan", habits: ["Gym", "3hrs of study", "3hrs of sim racing"] },
+    { id: 7, name: "Meghan", habits: ["Gym", "3hrs of study", "3hrs of sim racing"] },
     { id: 8, name: "Nirav", habits: ["Swim", "Read", "Skin Care"] },
     { id: 9, name: "Daksh", habits: ["No sugar", "Daily reading", "Workout","1 weekly podcast"] },
     { id: 10, name: "Raheel", habits: ["No sugar", "Daily workout", "Less than 1.5hrs of screentime","2hrs of productive work"] },
