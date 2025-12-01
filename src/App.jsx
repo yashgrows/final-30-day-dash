@@ -5,17 +5,15 @@ import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged }
 import { getFirestore, doc, setDoc, onSnapshot } from "firebase/firestore";
 
 // --- FIREBASE CONFIGURATION ---
-// 1. Go to Firebase Console -> Project Settings
-// 2. Copy your keys and paste them inside these quotes:
-
+// ⚠️ IMPORTANT: Paste your REAL keys here again!
 const firebaseConfig = {
-    apiKey: "AIzaSyAi9u70r8VUoKAjRIH_5rFL6DCo6wCgaok",
-    authDomain: "final-30-day-dash.firebaseapp.com",
-    projectId: "final-30-day-dash",
-    storageBucket: "final-30-day-dash.firebasestorage.app",
-    messagingSenderId: "492385758592",
-    appId: "1:492385758592:web:6bed1da895cb9abbfb6565"
-  };
+  apiKey: "AIzaSyAi9u70r8VUoKAjRIH_5rFL6DCo6wCgaok",
+  authDomain: "final-30-day-dash.firebaseapp.com",
+  projectId: "final-30-day-dash",
+  storageBucket: "final-30-day-dash.firebasestorage.app",
+  messagingSenderId: "492385758592",
+  appId: "1:492385758592:web:6bed1da895cb9abbfb6565"
+};
 
 // --- App Initialization ---
 let app, auth, db;
@@ -24,7 +22,7 @@ try {
   auth = getAuth(app);
   db = getFirestore(app);
 } catch (e) {
-  console.error("Firebase failed to init. Did you paste your keys?");
+  console.error("Firebase not initialized. Did you paste your keys?");
 }
 
 const appId = "30-day-dash-live"; 
@@ -32,31 +30,25 @@ const appId = "30-day-dash-live";
 const ChallengeTracker = () => {
   // --- Configuration ---
   const TOTAL_DAYS = 30;
-  const ADMIN_PIN = "26102004"; // Your Secret PIN
+  const ADMIN_PIN = "26102004"; 
   
   // Initial Users
   const INITIAL_USERS = [
-    { id: 1, name: "Yash", habits: ["Workout everyday", "Read non-fiction for 15 mins", "Stay logged out of personal instagram","100 daily push ups"] },
-    { id: 2, name: "Akshar", habits: ["Daily workout", "Daily 4hrs study", "Read a spiritual scripture for 15 mins"] },
+    { id: 1, name: "Yash", habits: ["Workout", "Read 10p", "No Sugar"] },
+    { id: 2, name: "Akshar", habits: ["Run 5k", "Code 1hr", "Water 2L"] },
     { id: 3, name: "Maadhav", habits: ["Daily workout", "Daily nutritional goal", "4hrs of deep work"] },
     { id: 4, name: "Dev", habits: ["No sugar", "Less than 4 hours phone screen time", "Gym"] },
-    { id: 5, name: "Lin", habits: ["30 mins workout/10k steps", "Read 10 pages of non-fiction", "Drink 2L of water","Eat 2 servings of fruits & veg"] },
-    { id: 6, name: "Priyan", habits: ["Write", "Draw", "Clean"] },
-    { id: 7, name: "Meghan", habits: ["Gym", "3hrs of study", "3hrs of sim racing"] },
+    { id: 5, name: "Lin", habits: ["Gym", "Protein", "Sleep 8h"] },
+    { id: 6, name: "Pritam", habits: ["Write", "Draw", "Clean"] },
+    { id: 7, name: "Megan", habits: ["Gym", "3hrs of study", "3hrs of sim racing"] },
     { id: 8, name: "Nirav", habits: ["Swim", "Read", "Skin Care"] },
     { id: 9, name: "Daksh", habits: ["No sugar", "Daily reading", "Workout","1 weekly podcast"] },
-    { id: 10, name: "Raheel", habits: ["No sugar", "Daily workout", "Less than 1.5hrs of screentime","2hrs of productive work"] },
+    { id: 10, name: "Raheel", habits: ["Dance", "Music", "Garden"] },
     { id: 11, name: "Nisha", habits: ["Daily Workout", "Handstand Practice", "No gluten/dairy"] },
     { id: 12, name: "Tirth", habits: ["1.5 hours reading", "Less than 20g sugar", "25 minutes of prayer","Hybrid workout"] },
     { id: 13, name: "Rayan", habits: ["5 hours of study", "30 mins workout daily", "Daily vlog"] },
     { id: 14, name: "Moulik", habits: ["Gym", "Eat a home-cooked dinner", "Watch 2 Marrow Lectures"] },
-    { id: 15, name: "Kliz", habits: ["No processed food", "No doomscrolling"] },
-    { id: 16, name: "Ram", habits: ["Exercise everyday", "Brainrot for under 2hrs", "Read for 15 minutes"] },
-    { id: 17, name: "Ash", habits: ["30 squats a day", "3 hours study daily", "Read for 30 minutes"] },
-    { id: 18, name: "Milan", habits: ["Overnight Oats for brekky", "60 push ups daily", "Healthy sleep schedule"] },
-    { id: 19, name: "Shreya", habits: ["Read for 30 mins daily", "1 fresh fruit a day", "Sleep by 11:30 everyday"] },
-    { id: 20, name: "Yogen", habits: ["No soda", "No ice cream", "2hrs daily playstation time limit","Lose 2.5lbs per week","20 min daily walk"] },
-    { id: 21, name: "Nimish", habits: ["50 push ups daily", "30 mins non-academic reading daily"] },
+    { id: 15, name: "Kliz", habits: ["Gym", "Eat a home-cooked dinner", "Daily vlog"] },
   ];
 
   // --- State ---
@@ -452,11 +444,24 @@ const ChallengeTracker = () => {
     );
   };
 
+  // UPDATED Daily Summary Logic to Support Ties
   const DailySummaryView = () => {
     const successfulUsers = INITIAL_USERS.filter(u => getDayStats(u.id, summaryDay).isSuccessful);
     const unsuccessfulUsers = INITIAL_USERS.filter(u => !getDayStats(u.id, summaryDay).isSuccessful);
-    const streakLeaders = INITIAL_USERS.map(u => ({...u, currentStreak: getStreakData(u.id).streaksByDay[summaryDay] || 0})).sort((a, b) => b.currentStreak - a.currentStreak);
-    const topStreak = streakLeaders[0];
+    
+    // Calculate Streak Leaders
+    const streakLeaders = INITIAL_USERS.map(u => ({
+      ...u,
+      currentStreak: getStreakData(u.id).streaksByDay[summaryDay] || 0
+    })).sort((a, b) => b.currentStreak - a.currentStreak);
+
+    // Find the Highest Streak Number
+    const maxStreakVal = streakLeaders[0]?.currentStreak || 0;
+
+    // Filter to find EVERYONE with that top streak (handling ties)
+    const allTopLeaders = streakLeaders.filter(u => u.currentStreak === maxStreakVal && maxStreakVal > 0);
+
+    // Filter for the "Top Streaks" list (everyone with > 0 streak)
     const topStreakLeaders = streakLeaders.filter(u => u.currentStreak > 0).slice(0, 5);
 
     return (
@@ -484,108 +489,27 @@ const ChallengeTracker = () => {
                  </div>
                  <div className="bg-white/10 p-3 rounded-xl backdrop-blur-sm border border-white/20"><Calendar className="text-white" size={24} /></div>
                </div>
+               
+               {/* UPDATED: Multiple Leaders Display */}
                <div className="mb-6 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded-lg p-4 flex items-center justify-between backdrop-blur-sm">
                  <div className="flex items-center gap-3">
                    <div className="bg-amber-500 text-white p-2 rounded-full shadow-lg shadow-amber-500/50"><Crown size={20} /></div>
-                   <div><p className="text-xs text-amber-200 font-bold uppercase tracking-widest">Current Streak Leader</p><p className="text-lg font-bold text-white">{topStreak?.name || "None"}</p></div>
+                   <div>
+                     <p className="text-xs text-amber-200 font-bold uppercase tracking-widest">
+                       {allTopLeaders.length > 1 ? "Current Streak Leaders" : "Current Streak Leader"}
+                     </p>
+                     <p className="text-lg font-bold text-white leading-tight">
+                       {allTopLeaders.length > 0 
+                         ? allTopLeaders.map(u => u.name).join(", ") 
+                         : "None"}
+                     </p>
+                   </div>
                  </div>
-                 <div className="text-2xl font-black text-amber-400">{topStreak?.currentStreak || 0} <span className="text-sm font-medium text-amber-200/70">DAYS</span></div>
+                 <div className="text-2xl font-black text-amber-400 whitespace-nowrap pl-4">
+                   {maxStreakVal} <span className="text-sm font-medium text-amber-200/70">DAYS</span>
+                 </div>
                </div>
+
                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                  <div className="bg-emerald-900/30 rounded-lg p-4 backdrop-blur-sm border border-emerald-500/30">
-                   <div className="flex items-center gap-2 mb-3 border-b border-emerald-500/30 pb-2"><CheckCircle className="text-emerald-400" size={18} /><h4 className="font-bold text-emerald-100 text-sm uppercase">Crushed It</h4></div>
-                   <div className="space-y-2">{successfulUsers.length > 0 ? successfulUsers.map(u => <div key={u.id} className="flex items-center gap-2 text-sm font-medium text-emerald-50"><div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">✓</div>{u.name}</div>) : <p className="text-xs text-emerald-200/50 italic">No completions yet.</p>}</div>
-                 </div>
-                 <div className="bg-red-900/30 rounded-lg p-4 backdrop-blur-sm border border-red-500/30">
-                   <div className="flex items-center gap-2 mb-3 border-b border-red-500/30 pb-2"><XCircle className="text-red-400" size={18} /><h4 className="font-bold text-red-100 text-sm uppercase">Needs to Lock In</h4></div>
-                   <div className="space-y-2">{unsuccessfulUsers.length > 0 ? unsuccessfulUsers.map(u => <div key={u.id} className="flex items-center gap-2 text-sm font-medium text-red-50 opacity-80"><div className="w-5 h-5 rounded-full bg-red-500/20 text-red-300 flex items-center justify-center text-[10px]">✕</div>{u.name}</div>) : <p className="text-xs text-green-300 italic">Everyone succeeded! 🎉</p>}</div>
-                 </div>
-                 <div className="bg-orange-900/30 rounded-lg p-4 backdrop-blur-sm border border-orange-500/30">
-                   <div className="flex items-center gap-2 mb-3 border-b border-orange-500/30 pb-2"><Flame className="text-orange-400 fill-orange-400" size={18} /><h4 className="font-bold text-orange-100 text-sm uppercase">Top Streaks</h4></div>
-                   <div className="space-y-2">{topStreakLeaders.length > 0 ? topStreakLeaders.map((u, idx) => <div key={u.id} className="flex items-center justify-between text-sm"><div className="flex items-center gap-2 text-orange-50"><span className={`text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full ${idx === 0 ? 'bg-yellow-400 text-yellow-900' : 'bg-white/10 text-white'}`}>{idx + 1}</span><span>{u.name}</span></div><span className="font-bold text-orange-300 text-xs">{u.currentStreak}</span></div>) : <p className="text-xs text-orange-200/50 italic">Start a streak today!</p>}</div>
-                 </div>
-               </div>
-               <div className="mt-8 pt-4 border-t border-white/10 flex justify-between items-center"><p className="text-xs text-indigo-200 uppercase tracking-widest font-bold">30 Day Dash</p></div>
-             </div>
-          </div>
-          <div className="mt-4 text-center"><p className="text-sm text-gray-500">Take a screenshot of the card above to share!</p></div>
-        </div>
-      </div>
-    );
-  };
-
-  const LeaderboardView = () => {
-    const leaders = INITIAL_USERS.map(u => { const stats = getStreakData(u.id); return { ...u, maxStreak: stats.maxStreak }; }).sort((a, b) => b.maxStreak - a.maxStreak);
-    return (
-      <div className="bg-white rounded-xl shadow-lg border border-indigo-100">
-        <div className="px-6 py-4 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50"><h2 className="text-lg font-bold text-indigo-900">Overall Standings & Badges</h2></div>
-        <div className="p-0">{leaders.map((user, idx) => (
-            <div key={user.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 border-b border-indigo-50 last:border-0 hover:bg-indigo-50/30 gap-4 transition-colors">
-              <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm ${idx === 0 ? 'bg-gradient-to-br from-yellow-300 to-yellow-500 text-yellow-900 border border-yellow-200' : idx === 1 ? 'bg-gradient-to-br from-slate-200 to-slate-400 text-slate-800 border border-slate-300' : idx === 2 ? 'bg-gradient-to-br from-orange-200 to-orange-400 text-orange-900 border border-orange-300' : 'bg-white text-gray-500 border border-gray-200'}`}>{idx === 0 ? <Crown size={16} /> : idx + 1}</div>
-                <div><p className="font-bold text-gray-900">{user.name}</p><p className="text-xs text-indigo-500 font-medium">{user.habits.join(", ")}</p></div>
-              </div>
-              <div className="flex items-center gap-6 justify-between sm:justify-end w-full sm:w-auto">
-                <div className="flex gap-1 flex-wrap justify-end">{getBadges(user.id).map((b, i) => (<div key={i} title={b.label} className="relative group transition-transform hover:scale-110"><b.icon size={22} className={`${b.color} cursor-help drop-shadow-sm`} /></div>))}</div>
-                <div className="text-right min-w-[60px]"><span className="block text-2xl font-black text-transparent bg-clip-text bg-gradient-to-br from-indigo-600 to-purple-600">{user.maxStreak}</span><span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Streak</span></div>
-              </div>
-            </div>
-          ))}</div>
-      </div>
-    );
-  };
-
-  // --- Main Render ---
-  if (viewMode === 'landing') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50 font-sans flex items-center justify-center">
-        {!user ? (
-          <div className="p-8 text-center bg-white/50 backdrop-blur-sm rounded-xl border border-indigo-100"><div className="animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mx-auto mb-4"></div><p className="text-indigo-600 font-medium">Loading...</p></div>
-        ) : <LandingPage />}
-        {showAdminLogin && <AdminLoginModal />}
-      </div>
-    );
-  }
-
-  // Personal View
-  if (viewMode === 'personal') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50 p-4 md:p-8 font-sans">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <div className="flex items-center justify-between">
-            {!window.location.hash.includes('user=') && <button onClick={() => { setViewMode('landing'); window.location.hash = ''; }} className="flex items-center gap-2 text-indigo-600 font-semibold hover:text-indigo-800 transition-colors"><ArrowLeft size={20} /> Back to Start</button>}
-            <div className={`text-right ${window.location.hash.includes('user=') ? 'w-full text-center' : ''}`}><h1 className="text-xl font-black text-indigo-900">30 Day Dash</h1><p className="text-sm text-indigo-500">Log your habits daily</p></div>
-          </div>
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-             <div className="flex items-center gap-2 mb-4 bg-white p-3 rounded-lg shadow-sm border border-indigo-50 w-fit">{isSaving ? <span className="text-sm text-emerald-600 font-bold flex items-center gap-1 animate-pulse"><Save size={14} /> Saving...</span> : <span className="text-sm text-gray-400 flex items-center gap-1"><CheckCircle size={14} /> All changes saved</span>}</div>
-             <TrackerTable />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Dashboard / Admin View
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50 p-4 md:p-8 font-sans">
-      <div className="max-w-6xl mx-auto space-y-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-indigo-200 pb-6">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setViewMode('landing')} className="md:hidden bg-white p-2 rounded-full shadow text-indigo-600"><ArrowLeft size={20} /></button>
-            <div><h1 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 tracking-tight">Admin Dashboard</h1><div className="flex items-center gap-3 mt-2"><p className="text-slate-600 font-bold text-lg">Consistency is key 🔑</p><span className="hidden md:inline text-slate-300">|</span><a href="https://instagram.com/yashgrows" target="_blank" rel="noreferrer" className="flex items-center gap-1 text-indigo-500 font-semibold hover:text-indigo-700 transition-colors"><Instagram size={16} /> @yashgrows</a></div></div>
-          </div>
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <button onClick={() => setShowShareModal(true)} className="flex items-center gap-2 bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl font-bold hover:bg-indigo-200 transition-colors"><LinkIcon size={16} /> Share Personal Links</button>
-            <div className="flex bg-white p-1.5 rounded-xl border border-indigo-100 shadow-lg shadow-indigo-100/50 w-full sm:w-auto overflow-x-auto">{[{ id: 'tracker', label: 'All Inputs' }, { id: 'summary', label: 'Summary', icon: Share2 }, { id: 'leaderboard', label: 'Leaderboard' }, { id: 'weekly', label: 'Weekly' }].map(tab => <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md' : 'text-gray-500 hover:bg-indigo-50 hover:text-indigo-600'}`}>{tab.icon && <tab.icon size={16} />}{tab.label}</button>)}</div>
-          </div>
-        </div>
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {!user ? <div className="p-12 text-center bg-white/50 backdrop-blur-sm rounded-xl shadow-sm border border-indigo-100"><div className="animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mx-auto mb-4"></div><p className="text-indigo-600 font-medium">Loading...</p></div> : <>{activeTab === 'tracker' && <><UserSelector /><TrackerTable /></>}{activeTab === 'leaderboard' && <LeaderboardView />}{activeTab === 'weekly' && <WeeklyChampView />}{activeTab === 'summary' && <DailySummaryView />}</>}
-        </div>
-      </div>
-      {showShareModal && <ShareLinksModal />}
-    </div>
-  );
-};
-
-export default ChallengeTracker;
+                   <div className="flex items-center gap
