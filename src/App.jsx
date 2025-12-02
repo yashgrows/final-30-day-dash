@@ -33,7 +33,7 @@ const ChallengeTracker = () => {
   
   // Initial Users (Updated List from your code)
   const INITIAL_USERS = [
-    { id: 1, name: "Yash", habits: ["Workout everyday", "Read non-fiction for 15 mins", "Stay logged out of personal instagram","100 daily push ups"] },
+    { id: 1, name: "Yash", habits: ["Workout everyday", "Read non-fiction for 15 mins", "Stay logged out of insta on phone","100 daily push ups"] },
     { id: 2, name: "Akshar", habits: ["Daily workout", "Daily 4hrs study", "Read a spiritual scripture for 15 mins"] },
     { id: 3, name: "Maadhav", habits: ["Daily workout", "Daily nutritional goal", "4hrs of deep work"] },
     { id: 4, name: "Dev", habits: ["No sugar", "Less than 4 hours phone screen time", "Gym"] },
