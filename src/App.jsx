@@ -432,36 +432,44 @@ const ChallengeTracker = () => {
  // --- UPDATED DAILY SUMMARY (Group Success Header) ---
 // --- UPDATED DAILY SUMMARY (Streaks next to Names) ---
 // --- UPDATED DAILY SUMMARY (Group Success + Streaks for Everyone) ---
+ // --- UPDATED DAILY SUMMARY (Total Wins = Successful Days) ---
   const DailySummaryView = () => {
     const successfulUsers = INITIAL_USERS.filter(u => getDayStats(u.id, summaryDay).isSuccessful);
     const unsuccessfulUsers = INITIAL_USERS.filter(u => !getDayStats(u.id, summaryDay).isSuccessful);
     
-    // Calculate Group Success Rate
+    // 1. Calculate Group Success Rate (For the Header)
     const completionRate = Math.round((successfulUsers.length / INITIAL_USERS.length) * 100);
 
-    // Calculate streaks for everyone
-    const streakLeaders = INITIAL_USERS.map(u => ({
-      ...u,
-      currentStreak: getStreakData(u.id).streaksByDay[summaryDay] || 0
-    })).sort((a, b) => b.currentStreak - a.currentStreak);
+    // 2. Calculate "Total Wins" (Total Successful Days) for everyone
+    const scoreData = INITIAL_USERS.map(u => {
+      let totalWins = 0;
+      // Loop through all 30 days to count how many were "Successful"
+      for (let day = 1; day <= TOTAL_DAYS; day++) {
+        if (getDayStats(u.id, day).isSuccessful) {
+          totalWins++;
+        }
+      }
+      return { name: u.name, score: totalWins };
+    });
 
-    // Group by streak score for the Right Column
-    const groupedByStreak = streakLeaders.reduce((acc, curr) => {
-      const score = curr.currentStreak;
+    // 3. Group users by their Total Wins score (to save space)
+    const groupedByScore = scoreData.reduce((acc, curr) => {
+      const score = curr.score;
       if (!acc[score]) acc[score] = [];
       acc[score].push(curr.name);
       return acc;
     }, {});
 
-    const rankedGroups = Object.entries(groupedByStreak)
-      .map(([streak, names]) => ({
-        streak: parseInt(streak),
+    // 4. Sort highest to lowest
+    const rankedScoreGroups = Object.entries(groupedByScore)
+      .map(([score, names]) => ({
+        score: parseInt(score),
         names: names.sort(),
       }))
-      .sort((a, b) => b.streak - a.streak)
-      .filter(group => group.streak > 0);
+      .sort((a, b) => b.score - a.score)
+      .filter(group => group.score > 0); // Hide people with 0 wins from this specific list
 
-    // Helper to get streak for list display
+    // Helper to get streak for list display (Visual flare for the first 2 columns)
     const getStreakDisplay = (uid) => {
       const s = getStreakData(uid).streaksByDay[summaryDay] || 0;
       return s > 0 ? `${s}🔥` : "";
@@ -524,7 +532,7 @@ const ChallengeTracker = () => {
                    </div>
                  </div>
                  
-                 {/* Needs to Lock In (Now shows streak!) */}
+                 {/* Needs to Lock In */}
                  <div className="bg-red-900/30 rounded-lg p-4 backdrop-blur-sm border border-red-500/30">
                    <div className="flex items-center gap-2 mb-3 border-b border-red-500/30 pb-2"><XCircle className="text-red-400" size={18} /><h4 className="font-bold text-red-100 text-sm uppercase">Needs to Lock In</h4></div>
                    <div className="space-y-2">
@@ -537,23 +545,23 @@ const ChallengeTracker = () => {
                    </div>
                  </div>
                  
-                 {/* Top Streaks (Grouped) */}
-                 <div className="bg-orange-900/30 rounded-lg p-4 backdrop-blur-sm border border-orange-500/30">
-                   <div className="flex items-center gap-2 mb-3 border-b border-orange-500/30 pb-2"><Flame className="text-orange-400 fill-orange-400" size={18} /><h4 className="font-bold text-orange-100 text-sm uppercase">All Streaks</h4></div>
+                 {/* Total Wins (Replaces Streaks) */}
+                 <div className="bg-purple-900/30 rounded-lg p-4 backdrop-blur-sm border border-purple-500/30">
+                   <div className="flex items-center gap-2 mb-3 border-b border-purple-500/30 pb-2"><Star className="text-purple-400 fill-purple-400" size={18} /><h4 className="font-bold text-purple-100 text-sm uppercase">Total Wins</h4></div>
                    <div className="space-y-3">
-                     {rankedGroups.length > 0 ? rankedGroups.map((group, idx) => (
-                       <div key={group.streak} className="flex flex-col text-sm border-b border-white/5 last:border-0 pb-2 last:pb-0">
+                     {rankedScoreGroups.length > 0 ? rankedScoreGroups.map((group, idx) => (
+                       <div key={group.score} className="flex flex-col text-sm border-b border-white/5 last:border-0 pb-2 last:pb-0">
                          <div className="flex items-center justify-between mb-1">
-                           <div className="flex items-center gap-2 text-orange-200">
+                           <div className="flex items-center gap-2 text-purple-200">
                              <span className={`text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full ${idx === 0 ? 'bg-yellow-400 text-yellow-900' : 'bg-white/10 text-white'}`}>#{idx + 1}</span>
-                             <span className="font-bold text-orange-400">{group.streak} Days</span>
+                             <span className="font-bold text-purple-300">{group.score} Days</span>
                            </div>
                          </div>
-                         <p className="text-orange-100/80 text-xs pl-7 leading-relaxed">
+                         <p className="text-purple-100/80 text-xs pl-7 leading-relaxed">
                            {group.names.join(", ")}
                          </p>
                        </div>
-                     )) : <p className="text-xs text-orange-200/50 italic">Start a streak today!</p>}
+                     )) : <p className="text-xs text-purple-200/50 italic">No wins yet!</p>}
                    </div>
                  </div>
                </div>
