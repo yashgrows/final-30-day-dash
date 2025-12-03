@@ -430,22 +430,24 @@ const ChallengeTracker = () => {
   // --- UPDATED DAILY SUMMARY (Multi-Leader + Ranks) ---
   // --- UPDATED DAILY SUMMARY (Grouped by Score for Screenshots) ---
  // --- UPDATED DAILY SUMMARY (Group Success Header) ---
+// --- UPDATED DAILY SUMMARY (Streaks next to Names) ---
   const DailySummaryView = () => {
     const successfulUsers = INITIAL_USERS.filter(u => getDayStats(u.id, summaryDay).isSuccessful);
     const unsuccessfulUsers = INITIAL_USERS.filter(u => !getDayStats(u.id, summaryDay).isSuccessful);
     
-    // Calculate Group Success Rate
-    const completionRate = Math.round((successfulUsers.length / INITIAL_USERS.length) * 100);
-
     // Sort Streak Leaders
-    const streakData = INITIAL_USERS.map(u => ({
-      name: u.name,
-      streak: getStreakData(u.id).streaksByDay[summaryDay] || 0
-    }));
+    const streakLeaders = INITIAL_USERS.map(u => ({
+      ...u,
+      currentStreak: getStreakData(u.id).streaksByDay[summaryDay] || 0
+    })).sort((a, b) => b.currentStreak - a.currentStreak);
+
+    // Identify Top Leaders (Handle Ties)
+    const maxStreakVal = streakLeaders[0]?.currentStreak || 0;
+    const allTopLeaders = streakLeaders.filter(u => u.currentStreak === maxStreakVal && maxStreakVal > 0);
 
     // Group by streak score for the Right Column
-    const groupedByStreak = streakData.reduce((acc, curr) => {
-      const score = curr.streak;
+    const groupedByStreak = streakLeaders.reduce((acc, curr) => {
+      const score = curr.currentStreak;
       if (!acc[score]) acc[score] = [];
       acc[score].push(curr.name);
       return acc;
@@ -458,6 +460,15 @@ const ChallengeTracker = () => {
       }))
       .sort((a, b) => b.streak - a.streak)
       .filter(group => group.streak > 0);
+
+    // Top Leader Names for Header
+    const topLeaderNames = rankedGroups.length > 0 ? rankedGroups[0].names : [];
+
+    // Helper to get streak for list display
+    const getStreakDisplay = (uid) => {
+      const s = getStreakData(uid).streaksByDay[summaryDay] || 0;
+      return s > 0 ? `${s}🔥` : "";
+    };
 
     return (
       <div className="max-w-3xl mx-auto">
@@ -486,19 +497,21 @@ const ChallengeTracker = () => {
                  <div className="bg-white/10 p-3 rounded-xl backdrop-blur-sm border border-white/20"><Calendar className="text-white" size={24} /></div>
                </div>
 
-               {/* NEW HEADER: GROUP SUCCESS RATE */}
-               <div className="mb-6 bg-gradient-to-r from-indigo-500 to-blue-600 border border-blue-400/30 rounded-lg p-4 flex items-center justify-between backdrop-blur-sm shadow-lg">
-                 <div className="flex items-center gap-4">
-                   <div className="bg-white/20 text-white p-3 rounded-full"><Users size={24} /></div>
+               {/* Multi-Leader Header */}
+               <div className="mb-6 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 rounded-lg p-4 flex items-center justify-between backdrop-blur-sm">
+                 <div className="flex items-center gap-3">
+                   <div className="bg-amber-500 text-white p-2 rounded-full shadow-lg shadow-amber-500/50"><Crown size={20} /></div>
                    <div>
-                     <p className="text-xs text-blue-100 font-bold uppercase tracking-widest">Group Success Rate</p>
-                     <p className="text-xl font-bold text-white leading-tight">
-                        {successfulUsers.length} / {INITIAL_USERS.length} <span className="text-sm font-normal text-blue-200">completed today</span>
+                     <p className="text-xs text-amber-200 font-bold uppercase tracking-widest">
+                       {topLeaderNames.length > 1 ? "Current Streak Leaders" : "Current Streak Leader"}
+                     </p>
+                     <p className="text-lg font-bold text-white leading-tight">
+                        {topLeaderNames.length > 0 ? topLeaderNames.join(", ") : "None"}
                      </p>
                    </div>
                  </div>
-                 <div className="text-4xl font-black text-white tracking-tighter">
-                   {completionRate}%
+                 <div className="text-2xl font-black text-amber-400 whitespace-nowrap pl-4">
+                   {maxStreakVal} <span className="text-sm font-medium text-amber-200/70">DAYS</span>
                  </div>
                </div>
 
@@ -506,13 +519,27 @@ const ChallengeTracker = () => {
                  {/* Crushed It */}
                  <div className="bg-emerald-900/30 rounded-lg p-4 backdrop-blur-sm border border-emerald-500/30">
                    <div className="flex items-center gap-2 mb-3 border-b border-emerald-500/30 pb-2"><CheckCircle className="text-emerald-400" size={18} /><h4 className="font-bold text-emerald-100 text-sm uppercase">Crushed It</h4></div>
-                   <div className="space-y-2">{successfulUsers.length > 0 ? successfulUsers.map(u => <div key={u.id} className="flex items-center gap-2 text-sm font-medium text-emerald-50"><div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">✓</div>{u.name}</div>) : <p className="text-xs text-emerald-200/50 italic">No completions yet.</p>}</div>
+                   <div className="space-y-2">
+                     {successfulUsers.length > 0 ? successfulUsers.map(u => (
+                       <div key={u.id} className="flex items-center gap-2 text-sm font-medium text-emerald-50">
+                         <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">✓</div>
+                         <span>{u.name} <span className="text-emerald-300 text-xs ml-1 font-bold opacity-80">{getStreakDisplay(u.id)}</span></span>
+                       </div>
+                     )) : <p className="text-xs text-emerald-200/50 italic">No completions yet.</p>}
+                   </div>
                  </div>
                  
                  {/* Needs to Lock In */}
                  <div className="bg-red-900/30 rounded-lg p-4 backdrop-blur-sm border border-red-500/30">
                    <div className="flex items-center gap-2 mb-3 border-b border-red-500/30 pb-2"><XCircle className="text-red-400" size={18} /><h4 className="font-bold text-red-100 text-sm uppercase">Needs to Lock In</h4></div>
-                   <div className="space-y-2">{unsuccessfulUsers.length > 0 ? unsuccessfulUsers.map(u => <div key={u.id} className="flex items-center gap-2 text-sm font-medium text-red-50 opacity-80"><div className="w-5 h-5 rounded-full bg-red-500/20 text-red-300 flex items-center justify-center text-[10px]">✕</div>{u.name}</div>) : <p className="text-xs text-green-300 italic">Everyone succeeded! 🎉</p>}</div>
+                   <div className="space-y-2">
+                     {unsuccessfulUsers.length > 0 ? unsuccessfulUsers.map(u => (
+                       <div key={u.id} className="flex items-center gap-2 text-sm font-medium text-red-50 opacity-80">
+                         <div className="w-5 h-5 rounded-full bg-red-500/20 text-red-300 flex items-center justify-center text-[10px]">✕</div>
+                         <span>{u.name} <span className="text-red-300 text-xs ml-1 font-bold opacity-80">{getStreakDisplay(u.id)}</span></span>
+                       </div>
+                     )) : <p className="text-xs text-green-300 italic">Everyone succeeded! 🎉</p>}
+                   </div>
                  </div>
                  
                  {/* Top Streaks (Grouped) */}
