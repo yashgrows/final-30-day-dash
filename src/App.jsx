@@ -433,17 +433,17 @@ const ChallengeTracker = () => {
 // --- UPDATED DAILY SUMMARY (Streaks next to Names) ---
 // --- UPDATED DAILY SUMMARY (Group Success + Streaks for Everyone) ---
  // --- UPDATED DAILY SUMMARY (Total Wins = Successful Days) ---
+// --- UPDATED DAILY SUMMARY (New Column Titles) ---
   const DailySummaryView = () => {
     const successfulUsers = INITIAL_USERS.filter(u => getDayStats(u.id, summaryDay).isSuccessful);
     const unsuccessfulUsers = INITIAL_USERS.filter(u => !getDayStats(u.id, summaryDay).isSuccessful);
     
-    // 1. Calculate Group Success Rate (For the Header)
+    // 1. Calculate Group Success Rate
     const completionRate = Math.round((successfulUsers.length / INITIAL_USERS.length) * 100);
 
-    // 2. Calculate "Total Wins" (Total Successful Days) for everyone
+    // 2. Calculate "Total Wins" (Total Successful Days)
     const scoreData = INITIAL_USERS.map(u => {
       let totalWins = 0;
-      // Loop through all 30 days to count how many were "Successful"
       for (let day = 1; day <= TOTAL_DAYS; day++) {
         if (getDayStats(u.id, day).isSuccessful) {
           totalWins++;
@@ -452,7 +452,7 @@ const ChallengeTracker = () => {
       return { name: u.name, score: totalWins };
     });
 
-    // 3. Group users by their Total Wins score (to save space)
+    // 3. Group by Total Wins
     const groupedByScore = scoreData.reduce((acc, curr) => {
       const score = curr.score;
       if (!acc[score]) acc[score] = [];
@@ -460,16 +460,15 @@ const ChallengeTracker = () => {
       return acc;
     }, {});
 
-    // 4. Sort highest to lowest
     const rankedScoreGroups = Object.entries(groupedByScore)
       .map(([score, names]) => ({
         score: parseInt(score),
         names: names.sort(),
       }))
       .sort((a, b) => b.score - a.score)
-      .filter(group => group.score > 0); // Hide people with 0 wins from this specific list
+      .filter(group => group.score > 0); 
 
-    // Helper to get streak for list display (Visual flare for the first 2 columns)
+    // Helper to get streak for list display
     const getStreakDisplay = (uid) => {
       const s = getStreakData(uid).streaksByDay[summaryDay] || 0;
       return s > 0 ? `${s}🔥` : "";
@@ -519,9 +518,9 @@ const ChallengeTracker = () => {
                </div>
 
                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                 {/* Crushed It Today*/}
+                 {/* Column 1: Crushed It Today */}
                  <div className="bg-emerald-900/30 rounded-lg p-4 backdrop-blur-sm border border-emerald-500/30">
-                   <div className="flex items-center gap-2 mb-3 border-b border-emerald-500/30 pb-2"><CheckCircle className="text-emerald-400" size={18} /><h4 className="font-bold text-emerald-100 text-sm uppercase">Crushed It</h4></div>
+                   <div className="flex items-center gap-2 mb-3 border-b border-emerald-500/30 pb-2"><CheckCircle className="text-emerald-400" size={18} /><h4 className="font-bold text-emerald-100 text-sm uppercase">Crushed It Today</h4></div>
                    <div className="space-y-2">
                      {successfulUsers.length > 0 ? successfulUsers.map(u => (
                        <div key={u.id} className="flex items-center gap-2 text-sm font-medium text-emerald-50">
@@ -532,7 +531,7 @@ const ChallengeTracker = () => {
                    </div>
                  </div>
                  
-                 {/* Needs to Lock In */}
+                 {/* Column 2: Needs to Lock In */}
                  <div className="bg-red-900/30 rounded-lg p-4 backdrop-blur-sm border border-red-500/30">
                    <div className="flex items-center gap-2 mb-3 border-b border-red-500/30 pb-2"><XCircle className="text-red-400" size={18} /><h4 className="font-bold text-red-100 text-sm uppercase">Needs to Lock In</h4></div>
                    <div className="space-y-2">
@@ -545,9 +544,9 @@ const ChallengeTracker = () => {
                    </div>
                  </div>
                  
-                 {/* Total Wins This Month(Replaces Streaks) */}
+                 {/* Column 3: Total Wins This Month */}
                  <div className="bg-purple-900/30 rounded-lg p-4 backdrop-blur-sm border border-purple-500/30">
-                   <div className="flex items-center gap-2 mb-3 border-b border-purple-500/30 pb-2"><Star className="text-purple-400 fill-purple-400" size={18} /><h4 className="font-bold text-purple-100 text-sm uppercase">Total Wins</h4></div>
+                   <div className="flex items-center gap-2 mb-3 border-b border-purple-500/30 pb-2"><Star className="text-purple-400 fill-purple-400" size={18} /><h4 className="font-bold text-purple-100 text-sm uppercase">Total Wins This Month</h4></div>
                    <div className="space-y-3">
                      {rankedScoreGroups.length > 0 ? rankedScoreGroups.map((group, idx) => (
                        <div key={group.score} className="flex flex-col text-sm border-b border-white/5 last:border-0 pb-2 last:pb-0">
