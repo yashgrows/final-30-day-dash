@@ -33,13 +33,13 @@ const ChallengeTracker = () => {
   
   // Initial Users (Updated List from your code)
   const INITIAL_USERS = [
-    { id: 1, name: "Yash", habits: ["Workout everyday", "Read non-fiction for 15 mins", "Stay logged out of insta on phone","100 daily push ups"] },
+    { id: 1, name: "Yash", habits: ["Workout everyday", "Read non-fiction for 15 mins", "Stay logged out of insta on phone","100 daily push ups","Daily prayer"] },
     { id: 2, name: "Akshar", habits: ["Daily workout", "Daily 4hrs study", "Read a spiritual scripture for 15 mins"] },
     { id: 3, name: "Maadhav", habits: ["Daily workout", "Daily nutritional goal", "4hrs of deep work"] },
     { id: 4, name: "Dev", habits: ["No sugar", "Less than 4 hours phone screen time", "Gym"] },
     { id: 5, name: "Lin", habits: ["30 mins workout/10k steps", "Read 10 pages of non-fiction", "Drink 2L of water","Eat 2 servings of fruits & veg"] },
     { id: 7, name: "Meghan", habits: ["Gym", "3hrs of study", "3hrs of sim racing"] },
-    { id: 8, name: "Nirav", habits: ["Sunlight first thing in the morning", "JOurnalling & Reading", "Daily workout"] },
+    { id: 8, name: "Nirav", habits: ["Sunlight first thing in the morning", "Journalling & Reading", "Daily workout"] },
     { id: 9, name: "Daksh", habits: ["No sugar", "Daily reading", "Workout","1 weekly podcast"] },
     { id: 10, name: "Raheel", habits: ["No sugar", "Daily workout", "100 push ups daily","2hrs of productive work","2L of water daily"] },
     { id: 11, name: "Nisha", habits: ["Daily Workout", "Handstand Practice", "No gluten/dairy"] },
