@@ -519,7 +519,7 @@ const ChallengeTracker = () => {
                </div>
 
                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                 {/* Crushed It */}
+                 {/* Crushed It Today*/}
                  <div className="bg-emerald-900/30 rounded-lg p-4 backdrop-blur-sm border border-emerald-500/30">
                    <div className="flex items-center gap-2 mb-3 border-b border-emerald-500/30 pb-2"><CheckCircle className="text-emerald-400" size={18} /><h4 className="font-bold text-emerald-100 text-sm uppercase">Crushed It</h4></div>
                    <div className="space-y-2">
@@ -545,7 +545,7 @@ const ChallengeTracker = () => {
                    </div>
                  </div>
                  
-                 {/* Total Wins (Replaces Streaks) */}
+                 {/* Total Wins This Month(Replaces Streaks) */}
                  <div className="bg-purple-900/30 rounded-lg p-4 backdrop-blur-sm border border-purple-500/30">
                    <div className="flex items-center gap-2 mb-3 border-b border-purple-500/30 pb-2"><Star className="text-purple-400 fill-purple-400" size={18} /><h4 className="font-bold text-purple-100 text-sm uppercase">Total Wins</h4></div>
                    <div className="space-y-3">
