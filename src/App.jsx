@@ -428,31 +428,38 @@ const ChallengeTracker = () => {
   };
 
   // --- UPDATED DAILY SUMMARY (Multi-Leader + Ranks) ---
+  // --- UPDATED DAILY SUMMARY (Grouped by Score for Screenshots) ---
   const DailySummaryView = () => {
     const successfulUsers = INITIAL_USERS.filter(u => getDayStats(u.id, summaryDay).isSuccessful);
     const unsuccessfulUsers = INITIAL_USERS.filter(u => !getDayStats(u.id, summaryDay).isSuccessful);
     
-    // Sort Streak Leaders
-    const streakLeaders = INITIAL_USERS.map(u => ({
-      ...u,
-      currentStreak: getStreakData(u.id).streaksByDay[summaryDay] || 0
-    })).sort((a, b) => b.currentStreak - a.currentStreak);
+    // 1. Calculate everyone's streak
+    const streakData = INITIAL_USERS.map(u => ({
+      name: u.name,
+      streak: getStreakData(u.id).streaksByDay[summaryDay] || 0
+    }));
 
-    // Identify Top Leaders (Handle Ties)
-    const maxStreakVal = streakLeaders[0]?.currentStreak || 0;
-    const allTopLeaders = streakLeaders.filter(u => u.currentStreak === maxStreakVal && maxStreakVal > 0);
+    // 2. Group by streak score
+    // Output: { "2": ["Yash", "Akshar"], "1": ["Milan"] }
+    const groupedByStreak = streakData.reduce((acc, curr) => {
+      const score = curr.streak;
+      if (!acc[score]) acc[score] = [];
+      acc[score].push(curr.name);
+      return acc;
+    }, {});
 
-    // Calculate Rankings (Handle Ties)
-    let currentRank = 1;
-    const rankedList = streakLeaders
-      .filter(u => u.currentStreak > 0)
-      .map((u, index, arr) => {
-        if (index > 0 && u.currentStreak < arr[index - 1].currentStreak) {
-          currentRank = index + 1; // Standard competition ranking
-        }
-        return { ...u, rank: currentRank };
-      })
-      .slice(0, 10); // Show top 10
+    // 3. Convert to array and sort by streak (Highest first)
+    const rankedGroups = Object.entries(groupedByStreak)
+      .map(([streak, names]) => ({
+        streak: parseInt(streak),
+        names: names.sort(), // Alphabetical within the group
+      }))
+      .sort((a, b) => b.streak - a.streak)
+      .filter(group => group.streak > 0); // Hide 0 streaks from the leaderboard list
+
+    // Top Leaders for the Header (Handles ties automatically now)
+    const maxStreakVal = rankedGroups.length > 0 ? rankedGroups[0].streak : 0;
+    const topLeaderNames = rankedGroups.length > 0 ? rankedGroups[0].names : [];
 
     return (
       <div className="max-w-3xl mx-auto">
@@ -487,12 +494,10 @@ const ChallengeTracker = () => {
                    <div className="bg-amber-500 text-white p-2 rounded-full shadow-lg shadow-amber-500/50"><Crown size={20} /></div>
                    <div>
                      <p className="text-xs text-amber-200 font-bold uppercase tracking-widest">
-                       {allTopLeaders.length > 1 ? "Current Streak Leaders" : "Current Streak Leader"}
+                       {topLeaderNames.length > 1 ? "Current Streak Leaders" : "Current Streak Leader"}
                      </p>
                      <p className="text-lg font-bold text-white leading-tight">
-                        {allTopLeaders.length > 0 
-                          ? allTopLeaders.map(u => u.name).join(", ") 
-                          : "None"}
+                        {topLeaderNames.length > 0 ? topLeaderNames.join(", ") : "None"}
                      </p>
                    </div>
                  </div>
@@ -502,26 +507,33 @@ const ChallengeTracker = () => {
                </div>
 
                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                 {/* Crushed It */}
                  <div className="bg-emerald-900/30 rounded-lg p-4 backdrop-blur-sm border border-emerald-500/30">
                    <div className="flex items-center gap-2 mb-3 border-b border-emerald-500/30 pb-2"><CheckCircle className="text-emerald-400" size={18} /><h4 className="font-bold text-emerald-100 text-sm uppercase">Crushed It</h4></div>
                    <div className="space-y-2">{successfulUsers.length > 0 ? successfulUsers.map(u => <div key={u.id} className="flex items-center gap-2 text-sm font-medium text-emerald-50"><div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">✓</div>{u.name}</div>) : <p className="text-xs text-emerald-200/50 italic">No completions yet.</p>}</div>
                  </div>
                  
+                 {/* Needs to Lock In */}
                  <div className="bg-red-900/30 rounded-lg p-4 backdrop-blur-sm border border-red-500/30">
                    <div className="flex items-center gap-2 mb-3 border-b border-red-500/30 pb-2"><XCircle className="text-red-400" size={18} /><h4 className="font-bold text-red-100 text-sm uppercase">Needs to Lock In</h4></div>
                    <div className="space-y-2">{unsuccessfulUsers.length > 0 ? unsuccessfulUsers.map(u => <div key={u.id} className="flex items-center gap-2 text-sm font-medium text-red-50 opacity-80"><div className="w-5 h-5 rounded-full bg-red-500/20 text-red-300 flex items-center justify-center text-[10px]">✕</div>{u.name}</div>) : <p className="text-xs text-green-300 italic">Everyone succeeded! 🎉</p>}</div>
                  </div>
                  
+                 {/* Top Streaks (Grouped) */}
                  <div className="bg-orange-900/30 rounded-lg p-4 backdrop-blur-sm border border-orange-500/30">
-                   <div className="flex items-center gap-2 mb-3 border-b border-orange-500/30 pb-2"><Flame className="text-orange-400 fill-orange-400" size={18} /><h4 className="font-bold text-orange-100 text-sm uppercase">Top Streaks</h4></div>
-                   <div className="space-y-2">
-                     {rankedList.length > 0 ? rankedList.map((u) => (
-                       <div key={u.id} className="flex items-center justify-between text-sm">
-                         <div className="flex items-center gap-2 text-orange-50">
-                           <span className={`text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full ${u.rank === 1 ? 'bg-yellow-400 text-yellow-900' : 'bg-white/10 text-white'}`}>#{u.rank}</span>
-                           <span>{u.name}</span>
+                   <div className="flex items-center gap-2 mb-3 border-b border-orange-500/30 pb-2"><Flame className="text-orange-400 fill-orange-400" size={18} /><h4 className="font-bold text-orange-100 text-sm uppercase">All Streaks</h4></div>
+                   <div className="space-y-3">
+                     {rankedGroups.length > 0 ? rankedGroups.map((group, idx) => (
+                       <div key={group.streak} className="flex flex-col text-sm border-b border-white/5 last:border-0 pb-2 last:pb-0">
+                         <div className="flex items-center justify-between mb-1">
+                           <div className="flex items-center gap-2 text-orange-200">
+                             <span className={`text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full ${idx === 0 ? 'bg-yellow-400 text-yellow-900' : 'bg-white/10 text-white'}`}>#{idx + 1}</span>
+                             <span className="font-bold text-orange-400">{group.streak} Days</span>
+                           </div>
                          </div>
-                         <span className="font-bold text-orange-300 text-xs">{u.currentStreak}</span>
+                         <p className="text-orange-100/80 text-xs pl-7 leading-relaxed">
+                           {group.names.join(", ")}
+                         </p>
                        </div>
                      )) : <p className="text-xs text-orange-200/50 italic">Start a streak today!</p>}
                    </div>
@@ -535,8 +547,6 @@ const ChallengeTracker = () => {
       </div>
     );
   };
-
-  // --- UPDATED LEADERBOARD (Shared Ranks) ---
   const LeaderboardView = () => {
     // Sort all users
     const leaders = INITIAL_USERS.map(u => {
