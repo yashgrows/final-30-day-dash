@@ -59,6 +59,7 @@ const ChallengeTracker = () => {
     { id: 23, name: "Priyan", habits: ["Sleep and wake up on time", "1hr of work towards a personal goal","Exercise for 30 mins"] },
     { id: 24, name: "Aman", habits: ["Screen time under 6 hours", "Gym 3x a week","7hrs of sleep"] },
     { id: 25, name: "Sahaj", habits: ["Gym 4x a week", "Clean room 3x a week","20 pull ups daily","Eat minimum 2000kcal  daily","10k steps daily"] },
+    { id: 26, name: "Jay", habits: ["Daily exercise", "Read for 20 mins daily","Less than 20g of sugar daily"] },
   ];
 
   // --- State ---
