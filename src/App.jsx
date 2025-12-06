@@ -39,6 +39,7 @@ const ChallengeTracker = () => {
     { id: 3, name: "Maadhav", habits: ["Daily workout", "Daily nutritional goal", "4hrs of deep work"] },
     { id: 4, name: "Dev", habits: ["No sugar", "Less than 4 hours phone screen time", "Gym"] },
     { id: 5, name: "Lin", habits: ["30 mins workout/10k steps", "Read 10 pages of non-fiction", "Drink 2L of water","Eat 2 servings of fruits & veg"] },
+    { id: 7, name: "Dhruv", habits: ["Meditate for 10 mins daily", "Read non-fiction for 30 mins daily", "Journal daily","Workout"] },
     { id: 7, name: "Meghan", habits: ["Gym", "3hrs of study", "3hrs of sim racing"] },
     { id: 8, name: "Nirav", habits: ["Sunlight first thing in the morning", "Journalling & Reading", "Daily workout"] },
     { id: 9, name: "Daksh", habits: ["No sugar", "Daily reading", "Workout","1 weekly podcast"] },
