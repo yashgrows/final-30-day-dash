@@ -402,8 +402,9 @@ const ChallengeTracker = () => {
 // --- UPDATED LEADERBOARD (With Group Stat Award) ---
  // --- UPDATED LEADERBOARD (Ranked by Total Wins) ---
  // --- UPDATED LEADERBOARD (Privacy Focused + Dual Metrics) ---
+ // --- UPDATED LEADERBOARD (Compact / 2-Column Mode) ---
   const LeaderboardView = () => {
-    // 1. Calculate stats for everyone
+    // 1. Calculate stats & Sort
     const leaders = INITIAL_USERS.map(u => {
       let totalWins = 0;
       for (let day = 1; day <= TOTAL_DAYS; day++) {
@@ -411,14 +412,12 @@ const ChallengeTracker = () => {
       }
       const stats = getStreakData(u.id);
       return { ...u, totalWins, maxStreak: stats.maxStreak };
-    })
-    // 2. Sort primarily by Total Wins, break ties with Max Streak
-    .sort((a, b) => {
+    }).sort((a, b) => {
       if (b.totalWins !== a.totalWins) return b.totalWins - a.totalWins;
       return b.maxStreak - a.maxStreak; 
     });
 
-    // 3. Assign Ranks with Ties
+    // 2. Assign Ranks with Ties
     let currentRank = 1;
     const rankedLeaders = leaders.map((u, index, arr) => {
       if (index > 0 && u.totalWins < arr[index - 1].totalWins) {
@@ -427,7 +426,7 @@ const ChallengeTracker = () => {
       return { ...u, rank: currentRank };
     });
 
-    // 4. Calculate Group Stat
+    // 3. Group Stat
     const totalGroupHabits = INITIAL_USERS.reduce((acc, user) => {
       let userTotal = 0;
       for (let d = 1; d <= TOTAL_DAYS; d++) {
@@ -438,70 +437,51 @@ const ChallengeTracker = () => {
     }, 0);
 
     return (
-      <div className="space-y-6">
-        {/* Group Stat Card */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 text-white shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-6 opacity-20 transform rotate-12"><Users size={100} /></div>
+      <div className="space-y-4">
+        {/* Compact Group Stat Card */}
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg p-4 text-white shadow-md relative overflow-hidden flex items-center justify-between">
           <div className="relative z-10">
-             <div className="flex items-center gap-3 mb-2">
-               <div className="bg-white/20 p-2 rounded-full"><Award size={24} /></div>
-               <h3 className="font-bold text-indigo-100 uppercase tracking-widest text-sm">Group Impact</h3>
-             </div>
-             <p className="text-3xl md:text-4xl font-black mb-1">{totalGroupHabits.toLocaleString()}</p>
-             <p className="text-indigo-100 font-medium opacity-90 max-w-sm">Collectively, we completed over <strong>{totalGroupHabits}</strong> healthy habits this month.</p>
+             <h3 className="font-bold text-indigo-100 uppercase tracking-widest text-xs mb-1">Group Impact</h3>
+             <p className="text-sm text-indigo-50 font-medium">
+               Collectively completed <strong>{totalGroupHabits.toLocaleString()}</strong> healthy habits.
+             </p>
           </div>
+          <div className="text-3xl font-black">{totalGroupHabits.toLocaleString()}</div>
         </div>
 
-        {/* Leaderboard Table */}
-        <div className="bg-white rounded-xl shadow-lg border border-indigo-100">
-          <div className="px-6 py-4 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
-             <h2 className="text-lg font-bold text-indigo-900">Final Standings (Most Consistent)</h2>
+        {/* 2-Column Leaderboard Grid */}
+        <div className="bg-white rounded-xl shadow-lg border border-indigo-100 overflow-hidden">
+          <div className="px-4 py-3 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
+             <h2 className="text-md font-bold text-indigo-900 text-center">🏆 Final Standings</h2>
           </div>
-          <div className="p-0">
+          
+          <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1">
             {rankedLeaders.map((user, idx) => (
-              <div key={user.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 border-b border-indigo-50 last:border-0 hover:bg-indigo-50/30 gap-4 transition-colors">
+              <div key={user.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-indigo-50/50 transition-colors border-b border-gray-50 md:border-b-0">
                 
                 {/* Left: Rank & Name */}
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm
-                    ${user.rank === 1 ? 'bg-gradient-to-br from-yellow-300 to-yellow-500 text-yellow-900 border border-yellow-200' : 
-                      user.rank === 2 ? 'bg-gradient-to-br from-slate-200 to-slate-400 text-slate-800 border border-slate-300' :
-                      user.rank === 3 ? 'bg-gradient-to-br from-orange-200 to-orange-400 text-orange-900 border border-orange-300' : 'bg-white text-gray-500 border border-gray-200'}`}>
-                    {user.rank === 1 ? <Crown size={16} /> : user.rank}
+                <div className="flex items-center gap-3">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shadow-sm
+                    ${user.rank === 1 ? 'bg-yellow-400 text-yellow-900' : 
+                      user.rank === 2 ? 'bg-slate-300 text-slate-800' :
+                      user.rank === 3 ? 'bg-orange-300 text-orange-900' : 'bg-gray-100 text-gray-500'}`}>
+                    {user.rank}
                   </div>
-                  <div>
-                    <p className="font-bold text-gray-900 text-lg">{user.name}</p>
-                    {/* Habits hidden for privacy */}
+                  <p className="font-bold text-gray-800 text-sm truncate max-w-[120px]">{user.name}</p>
+                </div>
+
+                {/* Right: Metrics (Compact) */}
+                <div className="flex items-center gap-3 text-right">
+                  <div className="flex flex-col items-end leading-none">
+                    <span className="text-xs font-bold text-orange-500">{user.maxStreak} Day</span>
+                    <span className="text-[9px] text-gray-400 uppercase">Streak</span>
+                  </div>
+                  <div className="flex flex-col items-end leading-none w-12">
+                    <span className="text-lg font-black text-indigo-600">{user.totalWins}</span>
+                    <span className="text-[9px] text-gray-400 uppercase">Wins</span>
                   </div>
                 </div>
 
-                {/* Right: Metrics */}
-                <div className="flex items-center gap-6 justify-between sm:justify-end w-full sm:w-auto mt-2 sm:mt-0">
-                  
-                  {/* Badges (Hidden on small mobile to save space, visible on desktop) */}
-                  <div className="hidden sm:flex gap-1 flex-wrap justify-end">
-                     {getBadges(user.id).map((b, i) => (
-                       <div key={i} title={b.label} className="relative group transition-transform hover:scale-110">
-                          <b.icon size={20} className={`${b.color} cursor-help drop-shadow-sm`} />
-                       </div>
-                     ))}
-                  </div>
-
-                  <div className="flex gap-6 text-right">
-                    {/* Max Streak Metric */}
-                    <div className="min-w-[60px]">
-                      <span className="block text-xl font-bold text-orange-500">{user.maxStreak}</span>
-                      <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Longest Streak</span>
-                    </div>
-
-                    {/* Total Wins Metric (Primary Ranking) */}
-                    <div className="min-w-[60px]">
-                      <span className="block text-2xl font-black text-transparent bg-clip-text bg-gradient-to-br from-indigo-600 to-purple-600">{user.totalWins}</span>
-                      <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Total Wins</span>
-                    </div>
-                  </div>
-
-                </div>
               </div>
             ))}
           </div>
