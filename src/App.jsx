@@ -400,17 +400,23 @@ const ChallengeTracker = () => {
     );
   };
 // --- UPDATED LEADERBOARD (With Group Stat Award) ---
+ // --- UPDATED LEADERBOARD (Ranked by Total Wins) ---
   const LeaderboardView = () => {
-    // 1. Sort all users by Max Streak
+    // 1. Calculate Total Wins for everyone & Sort by Wins
     const leaders = INITIAL_USERS.map(u => {
+      let totalWins = 0;
+      for (let day = 1; day <= TOTAL_DAYS; day++) {
+        if (getDayStats(u.id, day).isSuccessful) totalWins++;
+      }
+      // We still get badges based on streak, so we keep that data
       const stats = getStreakData(u.id);
-      return { ...u, maxStreak: stats.maxStreak };
-    }).sort((a, b) => b.maxStreak - a.maxStreak);
+      return { ...u, totalWins, maxStreak: stats.maxStreak };
+    }).sort((a, b) => b.totalWins - a.totalWins);
 
-    // 2. Assign Ranks with Ties
+    // 2. Assign Ranks with Ties (Based on Total Wins)
     let currentRank = 1;
     const rankedLeaders = leaders.map((u, index, arr) => {
-      if (index > 0 && u.maxStreak < arr[index - 1].maxStreak) {
+      if (index > 0 && u.totalWins < arr[index - 1].totalWins) {
         currentRank = index + 1;
       }
       return { ...u, rank: currentRank };
@@ -420,7 +426,6 @@ const ChallengeTracker = () => {
     const totalGroupHabits = INITIAL_USERS.reduce((acc, user) => {
       let userTotal = 0;
       for (let d = 1; d <= TOTAL_DAYS; d++) {
-        // Count every single green checkmark
         const { habitsDoneCount } = getDayStats(user.id, d);
         userTotal += habitsDoneCount;
       }
@@ -429,7 +434,7 @@ const ChallengeTracker = () => {
 
     return (
       <div className="space-y-6">
-        {/* NEW: Group Stat Card */}
+        {/* Group Stat Card */}
         <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 text-white shadow-xl relative overflow-hidden">
           <div className="absolute top-0 right-0 p-6 opacity-20 transform rotate-12">
             <Users size={100} />
@@ -448,10 +453,10 @@ const ChallengeTracker = () => {
           </div>
         </div>
 
-        {/* Existing Leaderboard Table */}
+        {/* Leaderboard Table (Ranked by Total Wins) */}
         <div className="bg-white rounded-xl shadow-lg border border-indigo-100">
           <div className="px-6 py-4 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
-             <h2 className="text-lg font-bold text-indigo-900">Overall Standings & Badges</h2>
+             <h2 className="text-lg font-bold text-indigo-900">Final Standings (Most Consistent)</h2>
           </div>
           <div className="p-0">
             {rankedLeaders.map((user, idx) => (
@@ -477,8 +482,8 @@ const ChallengeTracker = () => {
                      ))}
                   </div>
                   <div className="text-right min-w-[60px]">
-                    <span className="block text-2xl font-black text-transparent bg-clip-text bg-gradient-to-br from-indigo-600 to-purple-600">{user.maxStreak}</span>
-                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Streak</span>
+                    <span className="block text-2xl font-black text-transparent bg-clip-text bg-gradient-to-br from-indigo-600 to-purple-600">{user.totalWins}</span>
+                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Total Wins</span>
                   </div>
                 </div>
               </div>
