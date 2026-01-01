@@ -399,26 +399,96 @@ const ChallengeTracker = () => {
       </div>
     );
   };
-
+// --- UPDATED LEADERBOARD (With Group Stat Award) ---
   const LeaderboardView = () => {
-    const leaders = INITIAL_USERS.map(u => { const stats = getStreakData(u.id); return { ...u, maxStreak: stats.maxStreak }; }).sort((a, b) => b.maxStreak - a.maxStreak);
+    // 1. Sort all users by Max Streak
+    const leaders = INITIAL_USERS.map(u => {
+      const stats = getStreakData(u.id);
+      return { ...u, maxStreak: stats.maxStreak };
+    }).sort((a, b) => b.maxStreak - a.maxStreak);
+
+    // 2. Assign Ranks with Ties
     let currentRank = 1;
     const rankedLeaders = leaders.map((u, index, arr) => {
-      if (index > 0 && u.maxStreak < arr[index - 1].maxStreak) currentRank = index + 1;
+      if (index > 0 && u.maxStreak < arr[index - 1].maxStreak) {
+        currentRank = index + 1;
+      }
       return { ...u, rank: currentRank };
     });
+
+    // 3. Calculate "Group Stat" (Total Individual Habits Completed)
+    const totalGroupHabits = INITIAL_USERS.reduce((acc, user) => {
+      let userTotal = 0;
+      for (let d = 1; d <= TOTAL_DAYS; d++) {
+        // Count every single green checkmark
+        const { habitsDoneCount } = getDayStats(user.id, d);
+        userTotal += habitsDoneCount;
+      }
+      return acc + userTotal;
+    }, 0);
+
     return (
-      <div className="bg-white rounded-xl shadow-lg border border-indigo-100"><div className="px-6 py-4 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50"><h2 className="text-lg font-bold text-indigo-900">Overall Standings & Badges</h2></div>
-        <div className="p-0">{rankedLeaders.map((user, idx) => (
-            <div key={user.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 border-b border-indigo-50 last:border-0 hover:bg-indigo-50/30 gap-4 transition-colors">
-              <div className="flex items-center gap-4"><div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm ${user.rank === 1 ? 'bg-gradient-to-br from-yellow-300 to-yellow-500 text-yellow-900 border border-yellow-200' : user.rank === 2 ? 'bg-gradient-to-br from-slate-200 to-slate-400 text-slate-800 border border-slate-300' : user.rank === 3 ? 'bg-gradient-to-br from-orange-200 to-orange-400 text-orange-900 border border-orange-300' : 'bg-white text-gray-500 border border-gray-200'}`}>{user.rank === 1 ? <Crown size={16} /> : user.rank}</div><div><p className="font-bold text-gray-900">{user.name}</p><p className="text-xs text-indigo-500 font-medium">{user.habits.join(", ")}</p></div></div>
-              <div className="flex items-center gap-6 justify-between sm:justify-end w-full sm:w-auto"><div className="flex gap-1 flex-wrap justify-end">{getBadges(user.id).map((b, i) => (<div key={i} title={b.label} className="relative group transition-transform hover:scale-110"><b.icon size={22} className={`${b.color} cursor-help drop-shadow-sm`} /></div>))}</div><div className="text-right min-w-[60px]"><span className="block text-2xl font-black text-transparent bg-clip-text bg-gradient-to-br from-indigo-600 to-purple-600">{user.maxStreak}</span><span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Streak</span></div></div>
-            </div>
-          ))}</div>
+      <div className="space-y-6">
+        {/* NEW: Group Stat Card */}
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 text-white shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-6 opacity-20 transform rotate-12">
+            <Users size={100} />
+          </div>
+          <div className="relative z-10">
+             <div className="flex items-center gap-3 mb-2">
+               <div className="bg-white/20 p-2 rounded-full"><Award size={24} /></div>
+               <h3 className="font-bold text-indigo-100 uppercase tracking-widest text-sm">Group Impact</h3>
+             </div>
+             <p className="text-3xl md:text-4xl font-black mb-1">
+               {totalGroupHabits.toLocaleString()}
+             </p>
+             <p className="text-indigo-100 font-medium opacity-90 max-w-sm">
+               Collectively, we completed over <strong>{totalGroupHabits}</strong> healthy habits this month.
+             </p>
+          </div>
+        </div>
+
+        {/* Existing Leaderboard Table */}
+        <div className="bg-white rounded-xl shadow-lg border border-indigo-100">
+          <div className="px-6 py-4 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
+             <h2 className="text-lg font-bold text-indigo-900">Overall Standings & Badges</h2>
+          </div>
+          <div className="p-0">
+            {rankedLeaders.map((user, idx) => (
+              <div key={user.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 border-b border-indigo-50 last:border-0 hover:bg-indigo-50/30 gap-4 transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm
+                    ${user.rank === 1 ? 'bg-gradient-to-br from-yellow-300 to-yellow-500 text-yellow-900 border border-yellow-200' : 
+                      user.rank === 2 ? 'bg-gradient-to-br from-slate-200 to-slate-400 text-slate-800 border border-slate-300' :
+                      user.rank === 3 ? 'bg-gradient-to-br from-orange-200 to-orange-400 text-orange-900 border border-orange-300' : 'bg-white text-gray-500 border border-gray-200'}`}>
+                    {user.rank === 1 ? <Crown size={16} /> : user.rank}
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900">{user.name}</p>
+                    <p className="text-xs text-indigo-500 font-medium">{user.habits.join(", ")}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-6 justify-between sm:justify-end w-full sm:w-auto">
+                  <div className="flex gap-1 flex-wrap justify-end">
+                     {getBadges(user.id).map((b, i) => (
+                       <div key={i} title={b.label} className="relative group transition-transform hover:scale-110">
+                          <b.icon size={22} className={`${b.color} cursor-help drop-shadow-sm`} />
+                       </div>
+                     ))}
+                  </div>
+                  <div className="text-right min-w-[60px]">
+                    <span className="block text-2xl font-black text-transparent bg-clip-text bg-gradient-to-br from-indigo-600 to-purple-600">{user.maxStreak}</span>
+                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Streak</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   };
-
+  
   if (viewMode === 'landing') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50 font-sans flex items-center justify-center">
