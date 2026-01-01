@@ -401,19 +401,24 @@ const ChallengeTracker = () => {
   };
 // --- UPDATED LEADERBOARD (With Group Stat Award) ---
  // --- UPDATED LEADERBOARD (Ranked by Total Wins) ---
+ // --- UPDATED LEADERBOARD (Privacy Focused + Dual Metrics) ---
   const LeaderboardView = () => {
-    // 1. Calculate Total Wins for everyone & Sort by Wins
+    // 1. Calculate stats for everyone
     const leaders = INITIAL_USERS.map(u => {
       let totalWins = 0;
       for (let day = 1; day <= TOTAL_DAYS; day++) {
         if (getDayStats(u.id, day).isSuccessful) totalWins++;
       }
-      // We still get badges based on streak, so we keep that data
       const stats = getStreakData(u.id);
       return { ...u, totalWins, maxStreak: stats.maxStreak };
-    }).sort((a, b) => b.totalWins - a.totalWins);
+    })
+    // 2. Sort primarily by Total Wins, break ties with Max Streak
+    .sort((a, b) => {
+      if (b.totalWins !== a.totalWins) return b.totalWins - a.totalWins;
+      return b.maxStreak - a.maxStreak; 
+    });
 
-    // 2. Assign Ranks with Ties (Based on Total Wins)
+    // 3. Assign Ranks with Ties
     let currentRank = 1;
     const rankedLeaders = leaders.map((u, index, arr) => {
       if (index > 0 && u.totalWins < arr[index - 1].totalWins) {
@@ -422,7 +427,7 @@ const ChallengeTracker = () => {
       return { ...u, rank: currentRank };
     });
 
-    // 3. Calculate "Group Stat" (Total Individual Habits Completed)
+    // 4. Calculate Group Stat
     const totalGroupHabits = INITIAL_USERS.reduce((acc, user) => {
       let userTotal = 0;
       for (let d = 1; d <= TOTAL_DAYS; d++) {
@@ -436,24 +441,18 @@ const ChallengeTracker = () => {
       <div className="space-y-6">
         {/* Group Stat Card */}
         <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 text-white shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-6 opacity-20 transform rotate-12">
-            <Users size={100} />
-          </div>
+          <div className="absolute top-0 right-0 p-6 opacity-20 transform rotate-12"><Users size={100} /></div>
           <div className="relative z-10">
              <div className="flex items-center gap-3 mb-2">
                <div className="bg-white/20 p-2 rounded-full"><Award size={24} /></div>
                <h3 className="font-bold text-indigo-100 uppercase tracking-widest text-sm">Group Impact</h3>
              </div>
-             <p className="text-3xl md:text-4xl font-black mb-1">
-               {totalGroupHabits.toLocaleString()}
-             </p>
-             <p className="text-indigo-100 font-medium opacity-90 max-w-sm">
-               Collectively, we completed over <strong>{totalGroupHabits}</strong> healthy habits this month.
-             </p>
+             <p className="text-3xl md:text-4xl font-black mb-1">{totalGroupHabits.toLocaleString()}</p>
+             <p className="text-indigo-100 font-medium opacity-90 max-w-sm">Collectively, we completed over <strong>{totalGroupHabits}</strong> healthy habits this month.</p>
           </div>
         </div>
 
-        {/* Leaderboard Table (Ranked by Total Wins) */}
+        {/* Leaderboard Table */}
         <div className="bg-white rounded-xl shadow-lg border border-indigo-100">
           <div className="px-6 py-4 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
              <h2 className="text-lg font-bold text-indigo-900">Final Standings (Most Consistent)</h2>
@@ -461,6 +460,8 @@ const ChallengeTracker = () => {
           <div className="p-0">
             {rankedLeaders.map((user, idx) => (
               <div key={user.id} className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-4 border-b border-indigo-50 last:border-0 hover:bg-indigo-50/30 gap-4 transition-colors">
+                
+                {/* Left: Rank & Name */}
                 <div className="flex items-center gap-4">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm
                     ${user.rank === 1 ? 'bg-gradient-to-br from-yellow-300 to-yellow-500 text-yellow-900 border border-yellow-200' : 
@@ -469,22 +470,37 @@ const ChallengeTracker = () => {
                     {user.rank === 1 ? <Crown size={16} /> : user.rank}
                   </div>
                   <div>
-                    <p className="font-bold text-gray-900">{user.name}</p>
-                    <p className="text-xs text-indigo-500 font-medium">{user.habits.join(", ")}</p>
+                    <p className="font-bold text-gray-900 text-lg">{user.name}</p>
+                    {/* Habits hidden for privacy */}
                   </div>
                 </div>
-                <div className="flex items-center gap-6 justify-between sm:justify-end w-full sm:w-auto">
-                  <div className="flex gap-1 flex-wrap justify-end">
+
+                {/* Right: Metrics */}
+                <div className="flex items-center gap-6 justify-between sm:justify-end w-full sm:w-auto mt-2 sm:mt-0">
+                  
+                  {/* Badges (Hidden on small mobile to save space, visible on desktop) */}
+                  <div className="hidden sm:flex gap-1 flex-wrap justify-end">
                      {getBadges(user.id).map((b, i) => (
                        <div key={i} title={b.label} className="relative group transition-transform hover:scale-110">
-                          <b.icon size={22} className={`${b.color} cursor-help drop-shadow-sm`} />
+                          <b.icon size={20} className={`${b.color} cursor-help drop-shadow-sm`} />
                        </div>
                      ))}
                   </div>
-                  <div className="text-right min-w-[60px]">
-                    <span className="block text-2xl font-black text-transparent bg-clip-text bg-gradient-to-br from-indigo-600 to-purple-600">{user.totalWins}</span>
-                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Total Wins</span>
+
+                  <div className="flex gap-6 text-right">
+                    {/* Max Streak Metric */}
+                    <div className="min-w-[60px]">
+                      <span className="block text-xl font-bold text-orange-500">{user.maxStreak}</span>
+                      <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Longest Streak</span>
+                    </div>
+
+                    {/* Total Wins Metric (Primary Ranking) */}
+                    <div className="min-w-[60px]">
+                      <span className="block text-2xl font-black text-transparent bg-clip-text bg-gradient-to-br from-indigo-600 to-purple-600">{user.totalWins}</span>
+                      <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Total Wins</span>
+                    </div>
                   </div>
+
                 </div>
               </div>
             ))}
@@ -493,7 +509,6 @@ const ChallengeTracker = () => {
       </div>
     );
   };
-  
   if (viewMode === 'landing') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50 font-sans flex items-center justify-center">
