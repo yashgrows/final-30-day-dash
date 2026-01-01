@@ -403,8 +403,9 @@ const ChallengeTracker = () => {
  // --- UPDATED LEADERBOARD (Ranked by Total Wins) ---
  // --- UPDATED LEADERBOARD (Privacy Focused + Dual Metrics) ---
  // --- UPDATED LEADERBOARD (Compact / 2-Column Mode) ---
+// --- UPDATED LEADERBOARD (Split Columns + Tie-Breaker Logic) ---
   const LeaderboardView = () => {
-    // 1. Calculate stats & Sort
+    // 1. Calculate Stats & Sort
     const leaders = INITIAL_USERS.map(u => {
       let totalWins = 0;
       for (let day = 1; day <= TOTAL_DAYS; day++) {
@@ -413,20 +414,31 @@ const ChallengeTracker = () => {
       const stats = getStreakData(u.id);
       return { ...u, totalWins, maxStreak: stats.maxStreak };
     }).sort((a, b) => {
+      // Primary Sort: Total Wins (Highest first)
       if (b.totalWins !== a.totalWins) return b.totalWins - a.totalWins;
+      // Secondary Sort (Tie-Breaker): Max Streak (Highest first)
       return b.maxStreak - a.maxStreak; 
     });
 
-    // 2. Assign Ranks with Ties
+    // 2. Assign Ranks (1, 2, 3...)
+    // Users with identical wins AND identical streak get the same rank
     let currentRank = 1;
     const rankedLeaders = leaders.map((u, index, arr) => {
-      if (index > 0 && u.totalWins < arr[index - 1].totalWins) {
-        currentRank = index + 1;
+      if (index > 0) {
+        const prev = arr[index - 1];
+        if (u.totalWins < prev.totalWins || u.maxStreak < prev.maxStreak) {
+          currentRank = index + 1;
+        }
       }
       return { ...u, rank: currentRank };
     });
 
-    // 3. Group Stat
+    // 3. Split into Two Columns
+    const splitIndex = 12;
+    const goldColumn = rankedLeaders.slice(0, splitIndex);
+    const silverColumn = rankedLeaders.slice(splitIndex);
+
+    // 4. Group Stat Calculation
     const totalGroupHabits = INITIAL_USERS.reduce((acc, user) => {
       let userTotal = 0;
       for (let d = 1; d <= TOTAL_DAYS; d++) {
@@ -436,55 +448,75 @@ const ChallengeTracker = () => {
       return acc + userTotal;
     }, 0);
 
+    // Helper to render a list of users
+    const renderUserRow = (user, isGold) => (
+       <div key={user.id} className="flex items-center justify-between p-3 rounded-lg bg-white/60 border-b border-black/5 mb-1 last:mb-0 shadow-sm">
+          {/* Rank & Name */}
+          <div className="flex items-center gap-3 overflow-hidden">
+             <div className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold shadow-sm flex-shrink-0
+                ${user.rank === 1 ? 'bg-yellow-400 text-yellow-900' : 
+                  user.rank === 2 ? 'bg-slate-300 text-slate-900' :
+                  user.rank === 3 ? 'bg-orange-400 text-orange-900' : 
+                  isGold ? 'bg-amber-200 text-amber-900' : 'bg-gray-200 text-gray-600'}`}>
+                {user.rank <= 3 ? <Crown size={12} /> : user.rank}
+             </div>
+             <span className="font-bold text-sm truncate text-gray-800">{user.name}</span>
+          </div>
+          
+          {/* Stats: Wins & Streak */}
+          <div className="text-right flex items-center gap-4">
+             <div className="flex flex-col items-end">
+                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Streak</span>
+                <span className="text-xs font-bold text-orange-600">{user.maxStreak} Days</span>
+             </div>
+             <div className="flex flex-col items-end w-10">
+                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Wins</span>
+                <span className="text-lg font-black text-indigo-700 leading-none">{user.totalWins}</span>
+             </div>
+          </div>
+       </div>
+    );
+
     return (
-      <div className="space-y-4">
-        {/* Compact Group Stat Card */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg p-4 text-white shadow-md relative overflow-hidden flex items-center justify-between">
+      <div className="space-y-6">
+        {/* Group Stat Card */}
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 text-white shadow-xl relative overflow-hidden flex items-center justify-between">
           <div className="relative z-10">
              <h3 className="font-bold text-indigo-100 uppercase tracking-widest text-xs mb-1">Group Impact</h3>
              <p className="text-sm text-indigo-50 font-medium">
                Collectively completed <strong>{totalGroupHabits.toLocaleString()}</strong> healthy habits.
              </p>
           </div>
-          <div className="text-3xl font-black">{totalGroupHabits.toLocaleString()}</div>
+          <div className="text-4xl font-black">{totalGroupHabits.toLocaleString()}</div>
         </div>
 
-        {/* 2-Column Leaderboard Grid */}
-        <div className="bg-white rounded-xl shadow-lg border border-indigo-100 overflow-hidden">
-          <div className="px-4 py-3 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50">
-             <h2 className="text-md font-bold text-indigo-900 text-center">🏆 Final Standings</h2>
-          </div>
-          
-          <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1">
-            {rankedLeaders.map((user, idx) => (
-              <div key={user.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-indigo-50/50 transition-colors border-b border-gray-50 md:border-b-0">
-                
-                {/* Left: Rank & Name */}
-                <div className="flex items-center gap-3">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shadow-sm
-                    ${user.rank === 1 ? 'bg-yellow-400 text-yellow-900' : 
-                      user.rank === 2 ? 'bg-slate-300 text-slate-800' :
-                      user.rank === 3 ? 'bg-orange-300 text-orange-900' : 'bg-gray-100 text-gray-500'}`}>
-                    {user.rank}
-                  </div>
-                  <p className="font-bold text-gray-800 text-sm truncate max-w-[120px]">{user.name}</p>
-                </div>
-
-                {/* Right: Metrics (Compact) */}
-                <div className="flex items-center gap-3 text-right">
-                  <div className="flex flex-col items-end leading-none">
-                    <span className="text-xs font-bold text-orange-500">{user.maxStreak} Day</span>
-                    <span className="text-[9px] text-gray-400 uppercase">Streak</span>
-                  </div>
-                  <div className="flex flex-col items-end leading-none w-12">
-                    <span className="text-lg font-black text-indigo-600">{user.totalWins}</span>
-                    <span className="text-[9px] text-gray-400 uppercase">Wins</span>
-                  </div>
-                </div>
-
+        {/* Two-Column Leaderboard Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+           
+           {/* 🥇 Gold Column (Top 12) */}
+           <div className="rounded-xl border-2 border-amber-400 bg-amber-50 overflow-hidden shadow-lg">
+              <div className="bg-gradient-to-r from-amber-200 to-amber-400 p-3 text-center border-b border-amber-400">
+                 <h3 className="text-sm font-black text-amber-900 uppercase tracking-widest flex items-center justify-center gap-2">
+                    <Trophy size={16} /> Top 12 Leaders
+                 </h3>
               </div>
-            ))}
-          </div>
+              <div className="p-2">
+                 {goldColumn.map(u => renderUserRow(u, true))}
+              </div>
+           </div>
+
+           {/* 🥈 Silver Column (The Rest) */}
+           <div className="rounded-xl border-2 border-slate-300 bg-slate-50 overflow-hidden shadow-lg">
+              <div className="bg-gradient-to-r from-slate-200 to-slate-300 p-3 text-center border-b border-slate-300">
+                 <h3 className="text-sm font-black text-slate-700 uppercase tracking-widest flex items-center justify-center gap-2">
+                    <Medal size={16} /> The Chasers
+                 </h3>
+              </div>
+              <div className="p-2">
+                 {silverColumn.map(u => renderUserRow(u, false))}
+              </div>
+           </div>
+
         </div>
       </div>
     );
